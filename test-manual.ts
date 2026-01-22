@@ -44,16 +44,31 @@ async function authorizeLeetCode(
 
         await page.goto(loginUrl);
         console.log("Waiting for user to log in...");
+        console.log("Please log in to LeetCode in the browser window...");
 
+        // Wait for successful login by detecting URL change or user profile elements
         try {
-            await page.waitForSelector('[data-cypress="user-menu"]', {
-                timeout: 60000
-            });
+            // Option 1: Wait for URL to change away from login page (most reliable)
+            await page.waitForFunction(
+                () => {
+                    const url = window.location.href;
+                    return (
+                        !url.includes("/accounts/login") &&
+                        !url.includes("/accounts/signup")
+                    );
+                },
+                { timeout: 90000 }
+            );
+
+            console.log("Login detected! Extracting cookies...");
+
+            // Give a moment for cookies to be set
+            await sleep(2000);
         } catch (error) {
             return {
                 success: false,
                 message: "Login timeout. Please try again.",
-                error: "User did not complete login within 60 seconds"
+                error: "User did not complete login within 90 seconds"
             };
         }
 
