@@ -1,0 +1,12 @@
+{
+    "mcpServers": {
+        "leetcode-extended": {
+            "command": "node",
+            "args": [
+                "/Users/svetlana/Manual/leetcode/leetcode-mcp-extended/build/index.js",
+                "--site",
+                "global"
+            ]
+        }
+    }
+}
