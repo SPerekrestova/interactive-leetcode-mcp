@@ -464,6 +464,211 @@ For read-only operations, you can manually configure the session cookie:
 > - Stores credentials securely for reuse
 > - Enables submission capabilities
 
+## Complete Usage Guide
+
+### 1. First-Time Setup
+
+After installation, authorize once to enable submission features:
+
+```
+You: "Set up LeetCode for me"
+Claude: [Opens browser for authorization]
+You: [Log in to LeetCode]
+Claude: "✓ Authorized!"
+```
+
+Credentials are saved to `~/.leetcode-mcp/credentials.json` and automatically reused.
+
+### 2. Practice Workflow
+
+#### Get a Problem
+
+```
+You: "I want to practice the two-sum problem"
+Claude: [Fetches problem details, shows description and examples]
+```
+
+#### Write Your Solution
+
+Write your code in your preferred editor. When you need help:
+
+```
+You: "Can you give me a hint for two-sum?"
+Claude: [Provides contextual guidance]
+```
+
+#### Submit Your Solution
+
+```
+You: "Submit this solution: [paste your code]"
+Claude: [Submits code, returns results]
+```
+
+**Example submission:**
+
+```
+You: "Submit this Java solution for two-sum:
+class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        Map<Integer, Integer> map = new HashMap<>();
+        for (int i = 0; i < nums.length; i++) {
+            int complement = target - nums[i];
+            if (map.containsKey(complement)) {
+                return new int[] { map.get(complement), i };
+            }
+            map.put(nums[i], i);
+        }
+        return new int[] {};
+    }
+}"
+
+Claude: "🎉 Accepted! Runtime: 2 ms, Memory: 44.5 MB"
+```
+
+### 3. Tips & Best Practices
+
+- **Authorization:** Only needed once (or when session expires after weeks/months)
+- **Language Support:** Java, Python, C++, JavaScript, TypeScript
+- **Failed Submissions:** Automatically shows test case details for debugging
+- **Daily Challenges:** Use `get_daily_challenge` to fetch today's problem
+- **Problem Search:** Use `search_problems` with filters for difficulty, tags, keywords
+
+### 4. Conversational Examples
+
+#### Getting Started
+
+```
+You: "Show me today's daily challenge"
+Claude: [Fetches and displays daily problem]
+
+You: "I'll solve it in Python"
+[Write your solution]
+
+You: "Submit my solution: [code]"
+Claude: [Shows results]
+```
+
+#### Debugging Failed Submissions
+
+```
+You: "Submit my solution for valid-parentheses: [code]"
+Claude: "Wrong Answer - Input: '([)]', Expected: false, Got: true"
+
+You: "Why did it fail?"
+Claude: [Explains the edge case and suggests fix]
+
+You: "Submit updated solution: [fixed code]"
+Claude: "✓ Accepted!"
+```
+
+#### Exploring Problems
+
+```
+You: "Find me medium-difficulty array problems"
+Claude: [Lists matching problems]
+
+You: "Tell me about the 'container-with-most-water' problem"
+Claude: [Shows problem details]
+```
+
+## Troubleshooting
+
+### Authorization Issues
+
+**Problem:** Browser doesn't open
+
+```bash
+# Install Playwright browsers
+npx playwright install chromium
+```
+
+**Problem:** "Login timeout" error
+
+- Login must complete within 90 seconds
+- Check browser allows automated control
+- Try again with `authorize_leetcode` tool
+
+**Problem:** "Failed to extract cookies"
+
+- Ensure you fully completed login (reached LeetCode homepage)
+- Check browser didn't block cookie access
+
+### Submission Issues
+
+**Problem:** "Not authorized" error
+
+```
+You: "Authorize with LeetCode"
+# Complete login flow
+```
+
+**Problem:** "Unsupported language" error
+
+- Supported: `java`, `python`, `python3`, `cpp`, `c++`, `javascript`, `js`, `typescript`, `ts`
+- Language names are case-insensitive
+- Use exact names from the list
+
+**Problem:** "Session expired" error
+
+- Sessions typically last weeks/months
+- Re-authorize when prompted:
+  ```
+  You: "Authorize with LeetCode"
+  ```
+
+**Problem:** Submission timeout
+
+- LeetCode processing may be slow
+- Wait 30 seconds for automatic timeout
+- Check internet connection
+- Retry submission
+
+### MCP Server Issues
+
+**Problem:** Tools not appearing in Claude Code
+
+1. Verify MCP configuration file path
+2. Check absolute path to `build/index.js` is correct
+3. Restart Claude Code
+4. Test server manually:
+   ```bash
+   node build/index.js --site global
+   ```
+
+**Problem:** Server crashes or fails to start
+
+```bash
+# Rebuild project
+npm run build
+
+# Check for errors
+npm run build 2>&1 | grep error
+
+# Verify Node.js version
+node --version  # Should be v20.x or above
+```
+
+**Problem:** "Module not found" errors
+
+```bash
+# Reinstall dependencies
+rm -rf node_modules package-lock.json
+npm install
+npm run build
+```
+
+### Testing Issues
+
+**Problem:** Tests fail
+
+```bash
+# Run tests with verbose output
+npm test
+
+# Run specific test file
+npx vitest run tests/utils/credentials.test.ts
+```
+
 ## Response Format
 
 All tools return JSON-formatted responses with the following structure:
@@ -481,6 +686,39 @@ All tools return JSON-formatted responses with the following structure:
 
 The `JSON_DATA_STRING` contains either the requested data or an error message for failed requests.
 
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests.
+
+### Development Setup
+
+```bash
+git clone https://github.com/SPerekrestova/leetcode-mcp-extended.git
+cd leetcode-mcp-extended
+npm install
+npm run build
+npm test
+```
+
+### Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Build and test
+npm run build && npm test
+```
+
 ## License
 
 This project is licensed under the MIT License.
+
+## Acknowledgments
+
+- **Original Project:** [@jinzcdev/leetcode-mcp-server](https://github.com/jinzcdev/leetcode-mcp-server)
+- **MCP Protocol:** [Anthropic Model Context Protocol](https://modelcontextprotocol.io/)
+- **LeetCode:** Platform for coding practice
