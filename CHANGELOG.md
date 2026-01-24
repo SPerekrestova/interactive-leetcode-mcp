@@ -5,6 +5,73 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-01-24
+
+### Breaking Changes
+
+- **Removed China (leetcode.cn) site support** - Global leetcode.com only. CN users should stay on v1.x or use original [@jinzcdev/leetcode-mcp-server](https://github.com/jinzcdev/leetcode-mcp-server).
+- **Removed manual session cookie configuration** - Browser-based authorization now required. No more `--session` flag or `LEETCODE_SESSION` environment variable.
+- **Package renamed** - Now `@sperekrestova/interactive-leetcode-mcp` (was `@sperekrestova/leetcode-mcp-extended`). You must reinstall.
+- **CLI parameter changes** - Removed `--site` and `--session` parameters. Server runs with no configuration needed.
+
+### Changed
+
+- **Project rebranded** - Now "Interactive LeetCode MCP" emphasizing conversational learning workflow
+- **Simplified authentication** - Single code path using browser authorization only
+- **Streamlined documentation** - Removed comparison tables, multi-site options, and custom auth instructions
+- **Focused positioning** - Clear emphasis on interactive practice with Claude
+
+### Removed
+
+- `src/leetcode/leetcode-cn-service.ts` - Entire CN service implementation
+- All CN-specific tools and resources
+- `--site` CLI parameter
+- `--session` CLI parameter
+- Custom session cookie handling via environment variables
+- Multi-site configuration options
+- Comparison tables from documentation
+
+### Migration Guide
+
+**From v1.x to v2.0.0:**
+
+1. **Uninstall old package:**
+
+   ```bash
+   npm uninstall -g @sperekrestova/leetcode-mcp-extended
+   ```
+
+2. **Install new package:**
+
+   ```bash
+   npm install -g @sperekrestova/interactive-leetcode-mcp
+   ```
+
+3. **Update MCP configuration:**
+
+   ```json
+   {
+     "mcpServers": {
+       "leetcode": {
+         "command": "interactive-leetcode-mcp"
+       }
+     }
+   }
+   ```
+
+4. **Re-authorize:**
+   - Old credentials may not work
+   - Ask Claude to "Authorize with LeetCode"
+   - Browser will open for you to log in
+
+**Impact:**
+
+- CN site users: Stay on v1.x or use original jinzcdev server
+- Custom auth users: Switch to browser-based authorization
+- All users: Must reinstall package with new name
+
+---
+
 ## [1.0.0] - 2026-01-23
 
 ### Added
