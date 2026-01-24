@@ -58,55 +58,6 @@ export class SolutionResourceRegistry extends ResourceRegistry {
             }
         );
     }
-
-    protected registerChina(): void {
-        // China solution resource
-        this.server.resource(
-            "problem-solution",
-            new ResourceTemplate("solution://{slug}", {
-                list: undefined
-            }),
-            {
-                description:
-                    "Provides the complete content and metadata of a specific solution, including the full article text, author information, and related navigation links. This slug can be obtained from the 'node.slug' field in the response of the 'list_problem_solutions' tool.",
-                mimeType: "application/json"
-            },
-            async (uri, variables, extra) => {
-                const slug = variables.slug as string;
-                try {
-                    const solutionDetail =
-                        await this.leetcodeService.fetchSolutionArticleDetail(
-                            slug
-                        );
-                    return {
-                        contents: [
-                            {
-                                uri: uri.toString(),
-                                text: JSON.stringify({
-                                    slug,
-                                    solution: solutionDetail
-                                }),
-                                mimeType: "application/json"
-                            }
-                        ]
-                    };
-                } catch (error: any) {
-                    return {
-                        contents: [
-                            {
-                                uri: uri.toString(),
-                                text: JSON.stringify({
-                                    error: "Failed to fetch solution",
-                                    message: error.message
-                                }),
-                                mimeType: "application/json"
-                            }
-                        ]
-                    };
-                }
-            }
-        );
-    }
 }
 
 /**
