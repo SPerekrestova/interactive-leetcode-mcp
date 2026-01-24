@@ -20,14 +20,12 @@ import logger from "./utils/logger.js";
 /**
  * Parses and validates command line arguments for the LeetCode MCP Server.
  *
- * @returns Configuration object with optional session information
+ * @returns Configuration object
  */
 function parseArgs() {
     const args = minimist(process.argv.slice(2), {
-        string: ["session"],
         boolean: ["help"],
         alias: {
-            c: "session",
             h: "help"
         }
     });
@@ -38,16 +36,11 @@ function parseArgs() {
   Usage: leetcode-mcp-server [options]
 
   Options:
-    --session, -c <cookie>     Optional LeetCode session cookie for authenticated requests
     --help, -h                 Show this help message`);
         process.exit(0);
     }
 
-    const options = {
-        session: args.session || process.env.LEETCODE_SESSION
-    };
-
-    return options;
+    return {};
 }
 
 /**
@@ -69,7 +62,7 @@ function getPackageJson() {
  * registers all tools and resources, and connects the server to the stdio transport.
  */
 async function main() {
-    const options = parseArgs();
+    parseArgs(); // Handle --help flag
     const packageJSON = getPackageJson();
 
     const server = new McpServer({
@@ -78,7 +71,7 @@ async function main() {
     });
 
     const leetcodeService: LeetCodeBaseService =
-        await LeetCodeServiceFactory.createService(options.session);
+        await LeetCodeServiceFactory.createService();
 
     registerProblemTools(server, leetcodeService);
     registerUserTools(server, leetcodeService);
