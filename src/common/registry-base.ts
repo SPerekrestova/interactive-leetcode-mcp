@@ -19,12 +19,11 @@ export abstract class RegistryBase {
     ) {}
 
     /**
-     * Determines if the current LeetCode service is for the China version.
-     *
-     * @returns True if the service is for LeetCode CN, false otherwise
+     * Indicates whether the registry requires authentication.
+     * Subclasses should override this if they need authentication.
      */
-    protected isCN(): boolean {
-        return this.leetcodeService.isCN();
+    protected get requiresAuthentication(): boolean {
+        return false;
     }
 
     /**
@@ -32,70 +31,30 @@ export abstract class RegistryBase {
      *
      * @returns True if authenticated, false otherwise
      */
-    protected isAuthenticated(): boolean {
+    protected get isAuthenticated(): boolean {
         return this.leetcodeService.isAuthenticated();
     }
 
     /**
-     * Registers all applicable components based on site version and authentication status.
-     * This method follows a specific registration sequence to ensure proper component organization.
+     * Registers all applicable components based on authentication status.
      */
     public register(): void {
-        // 1. Register unauthenticated common components (available on both Global and CN)
-        this.registerCommon();
+        this.registerGlobal();
 
-        // 2. Register unauthenticated site-specific components based on site version
-        if (this.isCN()) {
-            this.registerChina();
-        } else {
-            this.registerGlobal();
-        }
-
-        // 3. Register authenticated components only if authentication credentials are available
-        if (this.isAuthenticated()) {
-            this.registerAuthenticatedCommon();
-
-            if (this.isCN()) {
-                this.registerAuthenticatedChina();
-            } else {
-                this.registerAuthenticatedGlobal();
-            }
+        if (this.requiresAuthentication && this.isAuthenticated) {
+            this.registerAuthenticatedGlobal();
         }
     }
 
     /**
-     * Registers common components available on both Global and CN platforms that don't require authentication.
-     * Implementing classes must define this method to register their specific common components.
-     */
-    protected registerCommon(): void {}
-
-    /**
-     * Registers components specific to the Global LeetCode site that don't require authentication.
-     * Implementing classes must define this method to register their Global-specific components.
+     * Registers components that don't require authentication.
+     * Implementing classes must define this method to register their components.
      */
     protected registerGlobal(): void {}
 
     /**
-     * Registers components specific to the China LeetCode site that don't require authentication.
-     * Implementing classes must define this method to register their China-specific components.
-     */
-    protected registerChina(): void {}
-
-    /**
-     * Registers common components available on both Global and CN platforms that require authentication.
-     * Implementing classes must define this method to register their authenticated common components.
-     */
-    protected registerAuthenticatedCommon(): void {}
-
-    /**
-     * Registers components specific to the Global LeetCode site that require authentication.
-     * Implementing classes must define this method to register their authenticated Global-specific components.
+     * Registers components that require authentication.
+     * Implementing classes must define this method to register their authenticated components.
      */
     protected registerAuthenticatedGlobal(): void {}
-
-    /**
-     * Registers components specific to the China LeetCode site that require authentication.
-     * Implementing classes must define this method to register their authenticated China-specific components.
-     */
-    protected registerAuthenticatedChina(): void {}
 }
