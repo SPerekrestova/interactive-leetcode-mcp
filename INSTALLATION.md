@@ -1,154 +1,201 @@
 # Installation Guide
 
-This guide helps you install and configure the leetcode-mcp-extended server with Claude Code.
-
 ## Prerequisites
 
 - Node.js v20.x or above
-- Git
-- Claude Code CLI
-- LeetCode account (for authorization and submission)
+- npm v8.x or above
+- LeetCode account
 
-## Installation Steps
+## Installation Options
 
-### 1. Clone and Build
+### Option 1: Global NPM Install (Recommended)
 
 ```bash
-git clone https://github.com/SPerekrestova/leetcode-mcp-extended.git
-cd leetcode-mcp-extended
+npm install -g @sperekrestova/interactive-leetcode-mcp
+```
+
+Verify installation:
+
+```bash
+interactive-leetcode-mcp --version
+```
+
+### Option 2: Local Development Install
+
+```bash
+# Clone repository
+git clone https://github.com/SPerekrestova/interactive-leetcode-mcp.git
+
+# Navigate to directory
+cd interactive-leetcode-mcp
+
+# Install dependencies and build
 npm install
 npm run build
-```
 
-### 2. Configure Claude Code
-
-Add the MCP server to your Claude Code configuration:
-
-**Location:** `~/.config/claude-code/mcp.json` or equivalent
-
-**Configuration:**
-
-```json
-{
-  "mcpServers": {
-    "leetcode-extended": {
-      "command": "node",
-      "args": [
-        "/absolute/path/to/leetcode-mcp-extended/build/index.js",
-        "--site",
-        "global"
-      ]
-    }
-  }
-}
-```
-
-Replace `/absolute/path/to` with the actual path where you cloned the repository.
-
-### 3. Restart Claude Code
-
-After updating the configuration, restart Claude Code for changes to take effect.
-
-### 4. Verify Installation
-
-In a new Claude Code session:
-
-```
-You: "What LeetCode tools are available?"
-Claude: [Lists tools including authorize_leetcode and submit_solution]
-```
-
-### 5. First-Time Authorization
-
-Before submitting solutions, authorize with LeetCode:
-
-```
-You: "Authorize with LeetCode"
-Claude: [Opens browser]
-You: [Log in to LeetCode]
-Claude: "✓ Successfully authorized!"
-```
-
-## Alternative: Global Installation
-
-For easier access, you can link the package globally:
-
-```bash
-cd leetcode-mcp-extended
+# Link globally
 npm link
 ```
 
-Then update your MCP configuration:
+## Configuration
+
+### Claude Code
+
+1. Locate your MCP configuration file:
+
+   - Default: `~/.config/claude-code/mcp.json`
+
+2. Add the server configuration:
 
 ```json
 {
   "mcpServers": {
-    "leetcode-extended": {
-      "command": "leetcode-mcp-extended",
-      "args": ["--site", "global"]
+    "leetcode": {
+      "command": "interactive-leetcode-mcp"
     }
   }
 }
 ```
 
+3. Restart Claude Code
+
+### Claude Desktop
+
+1. Locate your configuration file:
+
+   - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - Windows: `%APPDATA%/Claude/claude_desktop_config.json`
+
+2. Add the server configuration:
+
+```json
+{
+  "mcpServers": {
+    "leetcode": {
+      "command": "interactive-leetcode-mcp"
+    }
+  }
+}
+```
+
+3. Restart Claude Desktop
+
+## First-Time Setup
+
+After installation and configuration, authorize with LeetCode:
+
+### Using Claude Code or Claude Desktop
+
+Simply ask Claude:
+
+```
+"Authorize with LeetCode"
+```
+
+Claude will:
+
+1. Open a browser window
+2. Navigate to LeetCode login page
+3. Wait for you to log in
+4. Automatically extract and save credentials
+5. Confirm: "✓ Authorized!"
+
+Your credentials are saved to `~/.leetcode-mcp/credentials.json` and will be used for all future operations.
+
 ## Verification
 
-To verify the server is working:
+Test the installation:
 
-```bash
-# Test server starts
-node build/index.js --site global
-
-# Should start without errors and wait for MCP protocol messages
 ```
+You: "Get today's LeetCode daily challenge"
+Claude: [Fetches and displays the daily challenge]
+```
+
+If this works, you're all set!
 
 ## Troubleshooting
 
-### Server doesn't start
+### Command not found
 
-```bash
-# Rebuild the project
-npm run build
+**Issue:** `interactive-leetcode-mcp: command not found`
 
-# Check for TypeScript errors
-npm run build 2>&1 | grep error
-```
+**Solution:**
 
-### Tools not appearing in Claude Code
-
-1. Check your MCP configuration file path is correct
-2. Verify the absolute path to `build/index.js` is correct
-3. Restart Claude Code
-4. Check Claude Code logs for MCP connection errors
+- Verify global install: `npm list -g @sperekrestova/interactive-leetcode-mcp`
+- Check npm global bin path is in PATH: `npm config get prefix`
+- Reinstall: `npm install -g @sperekrestova/interactive-leetcode-mcp`
 
 ### Authorization fails
 
-```bash
-# Check Playwright browsers are installed
-npx playwright install chromium
+**Issue:** Browser doesn't open or credentials not saved
 
-# Verify credentials directory is writable
-mkdir -p ~/.leetcode-mcp
+**Solution:**
+
+- Install Playwright browsers: `npx playwright install chromium`
+- Check permissions on `~/.leetcode-mcp/` directory
+- Try manual authorization from command line: `interactive-leetcode-mcp` (if server has standalone auth)
+
+### Claude can't find the server
+
+**Issue:** Claude says "MCP server not available"
+
+**Solution:**
+
+- Verify configuration file syntax (valid JSON)
+- Check command is correct in config: `"command": "interactive-leetcode-mcp"`
+- Restart Claude Code/Desktop
+- Check MCP logs for errors
+
+### Tools not appearing
+
+**Issue:** LeetCode tools don't show up in Claude
+
+**Solution:**
+
+- Verify server is running: Check MCP server status in Claude
+- Check configuration is loaded: Tools should appear in tool list
+- Restart Claude and try again
+
+## Upgrading
+
+### From v1.x to v2.0.0
+
+Version 2.0.0 includes breaking changes. Follow migration steps:
+
+1. Uninstall old version:
+
+```bash
+npm uninstall -g @sperekrestova/leetcode-mcp-extended
 ```
 
-## Configuration Options
+2. Install new version:
 
-The server supports these command-line arguments:
+```bash
+npm install -g @sperekrestova/interactive-leetcode-mcp
+```
 
-- `--site <global|cn>`: LeetCode site (default: global)
-- `--session <cookie>`: Optional session cookie for read-only operations
+3. Update MCP configuration:
 
-Environment variables are also supported:
+   - Change command from `leetcode-mcp-extended` to `interactive-leetcode-mcp`
 
-- `LEETCODE_SITE`: global or cn
-- `LEETCODE_SESSION`: Session cookie
+4. Re-authorize:
+   - Old credentials may not work
+   - Run authorization flow again
 
-## Next Steps
+## Uninstalling
 
-Once installed:
+```bash
+# Remove global package
+npm uninstall -g @sperekrestova/interactive-leetcode-mcp
 
-1. Authorize with LeetCode (see README.md)
-2. Start solving problems conversationally
-3. Submit solutions directly from chat
+# Remove credentials (optional)
+rm -rf ~/.leetcode-mcp/
 
-See README.md for complete usage documentation.
+# Remove MCP configuration
+# Edit your MCP config file and remove the leetcode server entry
+```
+
+## Support
+
+- [GitHub Issues](https://github.com/SPerekrestova/interactive-leetcode-mcp/issues)
+- [Discussions](https://github.com/SPerekrestova/interactive-leetcode-mcp/discussions)
