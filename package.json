@@ -32,10 +32,18 @@
         "build"
     ],
     "license": "MIT",
+    "engines": {
+        "node": ">=20.0.0"
+    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/SPerekrestova/interactive-leetcode-mcp.git"
     },
+    "bugs": {
+        "url": "https://github.com/SPerekrestova/interactive-leetcode-mcp/issues"
+    },
+    "homepage": "https://github.com/SPerekrestova/interactive-leetcode-mcp#readme",
+    "types": "./build/index.d.ts",
     "lint-staged": {
         "*.{js,ts,jsx,tsx}": [
             "prettier --write",

@@ -49,7 +49,8 @@ Add to your MCP configuration file (`~/.config/claude-code/mcp.json`):
 {
   "mcpServers": {
     "leetcode": {
-      "command": "interactive-leetcode-mcp"
+      "command": "npx",
+      "args": ["-y", "interactive-leetcode-mcp"]
     }
   }
 }
@@ -63,7 +64,8 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 {
   "mcpServers": {
     "leetcode": {
-      "command": "interactive-leetcode-mcp"
+      "command": "npx",
+      "args": ["-y", "interactive-leetcode-mcp"]
     }
   }
 }

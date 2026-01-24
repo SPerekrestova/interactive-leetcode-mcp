@@ -18,25 +18,50 @@ import { registerUserTools } from "./mcp/tools/user-tools.js";
 import logger from "./utils/logger.js";
 
 /**
+ * Validates that the current Node.js version meets minimum requirements.
+ * @throws Error if Node.js version is below the minimum required version
+ */
+function validateNodeVersion() {
+    const currentVersion = process.versions.node;
+    const majorVersion = parseInt(currentVersion.split(".")[0], 10);
+    const minVersion = 20;
+
+    if (majorVersion < minVersion) {
+        console.error(
+            `Node.js version ${currentVersion} is not supported. Please upgrade to Node.js ${minVersion} or higher.`
+        );
+        process.exit(1);
+    }
+}
+
+/**
  * Parses and validates command line arguments for the LeetCode MCP Server.
  *
  * @returns Configuration object
  */
 function parseArgs() {
     const args = minimist(process.argv.slice(2), {
-        boolean: ["help"],
+        boolean: ["help", "version"],
         alias: {
-            h: "help"
+            h: "help",
+            v: "version"
         }
     });
 
     if (args.help) {
-        logger.info(`LeetCode MCP Server - Model Context Protocol server for LeetCode
+        console.error(`LeetCode MCP Server - Model Context Protocol server for LeetCode
 
   Usage: leetcode-mcp-server [options]
 
   Options:
-    --help, -h                 Show this help message`);
+    --help, -h                 Show this help message
+    --version, -v              Show version number`);
+        process.exit(0);
+    }
+
+    if (args.version) {
+        const packageJSON = getPackageJson();
+        console.error(packageJSON.version);
         process.exit(0);
     }
 
@@ -57,12 +82,29 @@ function getPackageJson() {
 }
 
 /**
+ * Sets up graceful shutdown handlers for the process.
+ * Ensures the server shuts down cleanly on SIGINT and SIGTERM signals.
+ */
+function setupShutdownHandlers() {
+    const shutdown = (signal: string) => {
+        logger.info(`Received ${signal}, shutting down gracefully...`);
+        process.exit(0);
+    };
+
+    process.on("SIGINT", () => shutdown("SIGINT"));
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
+}
+
+/**
  * Main function that initializes and starts the LeetCode MCP Server.
  * This function creates the server, sets up the LeetCode service,
  * registers all tools and resources, and connects the server to the stdio transport.
  */
 async function main() {
-    parseArgs(); // Handle --help flag
+    validateNodeVersion(); // Ensure Node.js version meets requirements
+    parseArgs(); // Handle --help and --version flags
+    setupShutdownHandlers(); // Set up graceful shutdown
+
     const packageJSON = getPackageJson();
 
     const server = new McpServer({
@@ -85,9 +127,30 @@ async function main() {
 
     const transport = new StdioServerTransport();
     await server.connect(transport);
+
+    logger.info("LeetCode MCP Server started successfully");
 }
 
 main().catch((error) => {
     logger.error("Failed to start LeetCode MCP Server: %s", error);
+
+    // Provide actionable error messages for common issues
+    if (error.message?.includes("ECONNREFUSED")) {
+        logger.error(
+            "Connection refused. Please check your internet connection and try again."
+        );
+    } else if (error.message?.includes("playwright")) {
+        logger.error(
+            "Playwright browser not found. Please run: npx playwright install chromium"
+        );
+    } else if (
+        error.message?.includes("authentication") ||
+        error.message?.includes("authorized")
+    ) {
+        logger.error(
+            "Authentication failed. Please run the authorization tool to log in to LeetCode."
+        );
+    }
+
     process.exit(1);
 });
