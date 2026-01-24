@@ -1,7 +1,8 @@
 {
     "name": "@sperekrestova/interactive-leetcode-mcp",
     "description": "Interactive LeetCode MCP server with authorization and submission capabilities for seamless problem-solving with Claude",
-    "version": "2.0.0",
+    "version": "2.0.1",
+    "mcpName": "io.github.SPerekrestova/interactive-leetcode-mcp",
     "author": "SPerekrestova",
     "main": "./build/index.js",
     "keywords": [
