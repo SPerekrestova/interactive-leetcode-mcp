@@ -1,10 +1,11 @@
 {
     "name": "@sperekrestova/interactive-leetcode-mcp",
     "description": "Interactive LeetCode MCP server with authorization and submission capabilities for seamless problem-solving with Claude",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "mcpName": "io.github.SPerekrestova/interactive-leetcode-mcp",
     "author": "SPerekrestova",
     "main": "./build/index.js",
+    "module": "./src/index.ts",
     "keywords": [
         "leetcode",
         "lc",
@@ -23,7 +24,9 @@
         "start": "node build/index.js",
         "dev": "tsc-watch --onSuccess \"node build/index.js\"",
         "format": "prettier --write .",
-        "prepare": "husky"
+        "prepare": "husky",
+        "sync-version": "node -e \"const pkg=require('./package.json');const server=require('./server.json');server.version=pkg.version;server.packages[0].version=pkg.version;require('fs').writeFileSync('server.json',JSON.stringify(server,null,4)+'\\n')\"",
+        "prepublishOnly": "npm run sync-version && npm run build"
     },
     "bin": {
         "interactive-leetcode-mcp": "build/index.js"

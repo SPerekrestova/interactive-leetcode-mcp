@@ -5,6 +5,7 @@
 [![npm version](https://img.shields.io/npm/v/@sperekrestova/interactive-leetcode-mcp.svg)](https://www.npmjs.com/package/@sperekrestova/interactive-leetcode-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/@sperekrestova/interactive-leetcode-mcp.svg)](https://www.npmjs.com/package/@sperekrestova/interactive-leetcode-mcp)
 [![GitHub stars](https://img.shields.io/github/stars/SPerekrestova/interactive-leetcode-mcp)](https://github.com/SPerekrestova/interactive-leetcode-mcp)
+[![MCP Registry](https://badge.mcpx.dev?status=on)](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.SPerekrestova%2Finteractive-leetcode-mcp/versions/2.0.1)
 [![GitHub license](https://img.shields.io/github/license/SPerekrestova/interactive-leetcode-mcp)](https://github.com/SPerekrestova/interactive-leetcode-mcp/blob/main/LICENSE)
 
 ## Features
@@ -149,51 +150,6 @@ Claude: "🎉 Accepted! Runtime: 2ms (beats 95.3%)"
 
 - View contest performance and rankings
 
-See [full tool documentation](./docs/tools.md) for complete details.
-
-## Example Workflow
-
-```javascript
-// 1. Authorize (one-time setup)
-await authorize_leetcode();
-
-// 2. Get today's challenge
-const challenge = await get_daily_challenge();
-
-// 3. Fetch problem details
-const problem = await get_problem({ titleSlug: "two-sum" });
-
-// 4. Submit solution
-const result = await submit_solution({
-  problemSlug: "two-sum",
-  code: "class Solution { ... }",
-  language: "java"
-});
-
-// 5. Check user stats
-const profile = await get_user_profile({ username: "myusername" });
-```
-
-## Development
-
-### Build
-
-```bash
-npm run build
-```
-
-### Test
-
-```bash
-npm test
-```
-
-### Watch Mode
-
-```bash
-npm run dev
-```
-
 ## Troubleshooting
 
 **"Not authorized" error**
@@ -214,14 +170,9 @@ npm run dev
 
 - Ensure Playwright is installed: `npx playwright install chromium`
 
-## Contributing
+## Acknowledgements
 
-Contributions welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes with tests
-4. Submit a pull request
+Forked from [Leetcode mcp](https://github.com/jinzcdev/leetcode-mcp-server))
 
 ## License
 
@@ -230,6 +181,5 @@ MIT © SPerekrestova
 ## Links
 
 - [NPM Package](https://www.npmjs.com/package/@sperekrestova/interactive-leetcode-mcp)
-- [GitHub Repository](https://github.com/SPerekrestova/interactive-leetcode-mcp)
 - [Report Issues](https://github.com/SPerekrestova/interactive-leetcode-mcp/issues)
 - [MCP Documentation](https://modelcontextprotocol.io)
