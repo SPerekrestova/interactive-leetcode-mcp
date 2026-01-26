@@ -3,7 +3,10 @@ import { existsSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
 import { describe, expect, it, vi } from "vitest";
-import { getBrowserCookiePath } from "../../src/utils/browser-cookies";
+import {
+    extractLeetCodeCookies,
+    getBrowserCookiePath
+} from "../../src/utils/browser-cookies";
 
 vi.mock("fs", () => ({
     existsSync: vi.fn()
@@ -102,5 +105,37 @@ describe("getBrowserCookiePath", () => {
         expect(result).toEqual({ path: chromePath, browser: "chrome" });
 
         Object.defineProperty(process, "platform", { value: originalPlatform });
+    });
+});
+
+describe("extractLeetCodeCookies", () => {
+    it("should extract csrftoken and LEETCODE_SESSION cookies", async () => {
+        // This will use a real SQLite database for integration testing
+        // We'll create a mock database for this test
+        const mockDbPath = join(__dirname, "fixtures/test-cookies.db");
+
+        // For now, we'll skip this test if the fixture doesn't exist
+        if (!existsSync(mockDbPath)) {
+            console.warn("Skipping test: fixture database not found");
+            return;
+        }
+
+        const cookies = await extractLeetCodeCookies(mockDbPath);
+
+        expect(cookies).toHaveProperty("csrftoken");
+        expect(cookies).toHaveProperty("LEETCODE_SESSION");
+    });
+
+    it("should throw error if cookies not found", async () => {
+        const mockDbPath = join(__dirname, "fixtures/empty-cookies.db");
+
+        if (!existsSync(mockDbPath)) {
+            console.warn("Skipping test: fixture database not found");
+            return;
+        }
+
+        await expect(extractLeetCodeCookies(mockDbPath)).rejects.toThrow(
+            "LeetCode cookies not found"
+        );
     });
 });

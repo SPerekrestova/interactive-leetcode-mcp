@@ -1,6 +1,7 @@
 // src/utils/browser-cookies.ts
-import { existsSync } from "fs";
-import { homedir } from "os";
+import Database from "better-sqlite3";
+import { copyFileSync, existsSync, unlinkSync } from "fs";
+import { homedir, tmpdir } from "os";
 import { join } from "path";
 
 export interface BrowserCookieInfo {
@@ -76,4 +77,66 @@ export function getBrowserCookiePath(): BrowserCookieInfo | null {
     }
 
     return null;
+}
+
+export interface LeetCodeCookies {
+    csrftoken: string;
+    LEETCODE_SESSION: string;
+}
+
+/**
+ * Extracts LeetCode cookies from a Chromium cookie database
+ * @param cookiePath - Path to the Cookies SQLite database
+ * @returns Object with csrftoken and LEETCODE_SESSION
+ * @throws Error if cookies not found or database cannot be read
+ */
+export async function extractLeetCodeCookies(
+    cookiePath: string
+): Promise<LeetCodeCookies> {
+    // Copy database to temp location to avoid lock conflicts
+    const tempPath = join(tmpdir(), `leetcode-cookies-${Date.now()}.db`);
+
+    try {
+        copyFileSync(cookiePath, tempPath);
+
+        const db = new Database(tempPath, { readonly: true });
+
+        const rows = db
+            .prepare(
+                `
+            SELECT name, value
+            FROM cookies
+            WHERE host_key LIKE '%leetcode.com%'
+            AND (name = 'csrftoken' OR name = 'LEETCODE_SESSION')
+        `
+            )
+            .all() as Array<{ name: string; value: string }>;
+
+        db.close();
+
+        const cookies: Partial<LeetCodeCookies> = {};
+
+        for (const row of rows) {
+            if (row.name === "csrftoken") {
+                cookies.csrftoken = row.value;
+            } else if (row.name === "LEETCODE_SESSION") {
+                cookies.LEETCODE_SESSION = row.value;
+            }
+        }
+
+        if (!cookies.csrftoken || !cookies.LEETCODE_SESSION) {
+            throw new Error(
+                "LeetCode cookies not found. Please make sure you are logged into LeetCode in your browser."
+            );
+        }
+
+        return cookies as LeetCodeCookies;
+    } finally {
+        // Clean up temp file
+        try {
+            unlinkSync(tempPath);
+        } catch {
+            // Ignore cleanup errors
+        }
+    }
 }
