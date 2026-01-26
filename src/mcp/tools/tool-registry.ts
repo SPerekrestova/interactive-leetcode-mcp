@@ -4,8 +4,7 @@ import { LeetCodeBaseService } from "../../leetcode/leetcode-base-service.js";
 
 /**
  * Base registry class for LeetCode tools that provides site type detection and authentication status checks.
- * This abstract class defines the framework for registering different categories of tools based on
- * site version (Global or CN) and authentication requirements.
+ * This abstract class defines the framework for registering different categories of tools
  */
 export abstract class ToolRegistry extends RegistryBase {
     /**
@@ -19,13 +18,5 @@ export abstract class ToolRegistry extends RegistryBase {
         protected leetcodeService: LeetCodeBaseService
     ) {
         super(server, leetcodeService);
-    }
-
-    /**
-     * Registers all applicable tools based on site version and authentication status.
-     * This method follows a specific registration sequence to ensure proper tool organization.
-     */
-    public registerTools(): void {
-        this.register();
     }
 }

@@ -11,10 +11,12 @@ import { ToolRegistry } from "./tool-registry.js";
 export class ProblemToolRegistry extends ToolRegistry {
     protected registerPublic(): void {
         // Daily challenge tool
-        this.server.tool(
+        this.server.registerTool(
             "get_daily_challenge",
-            "Retrieves today's LeetCode Daily Challenge problem with complete details, including problem description, constraints, and examples",
-            {},
+            {
+                description:
+                    "Retrieves today's LeetCode Daily Challenge problem with complete details, including problem description, constraints, and examples"
+            },
             async () => {
                 const data = await this.leetcodeService.fetchDailyChallenge();
                 return {
@@ -32,15 +34,19 @@ export class ProblemToolRegistry extends ToolRegistry {
         );
 
         // Problem details tool
-        this.server.tool(
+        this.server.registerTool(
             "get_problem",
-            "Retrieves details about a specific LeetCode problem, including its description, examples, constraints, and related information",
             {
-                titleSlug: z
-                    .string()
-                    .describe(
-                        "The URL slug/identifier of the problem (e.g., 'two-sum', 'add-two-numbers') as it appears in the LeetCode URL"
-                    )
+                description:
+                    "Retrieves details about a specific LeetCode problem, including its description, examples, constraints, and related information",
+
+                inputSchema: {
+                    titleSlug: z
+                        .string()
+                        .describe(
+                            "The URL slug/identifier of the problem (e.g., 'two-sum', 'add-two-numbers') as it appears in the LeetCode URL"
+                        )
+                }
             },
             async ({ titleSlug }) => {
                 const data =
@@ -62,45 +68,49 @@ export class ProblemToolRegistry extends ToolRegistry {
         );
 
         // Search problems tool
-        this.server.tool(
+        this.server.registerTool(
             "search_problems",
-            "Searches for LeetCode problems based on multiple filter criteria including categories, tags, difficulty levels, and keywords, with pagination support",
             {
-                category: z
-                    .enum(PROBLEM_CATEGORIES as [string])
-                    .default("all-code-essentials")
-                    .describe(
-                        "Problem category filter (e.g., 'algorithms', 'database', 'shell') to narrow down the problem domain"
-                    ),
-                tags: z
-                    .array(z.enum(PROBLEM_TAGS as [string]))
-                    .optional()
-                    .describe(
-                        "List of topic tags to filter problems by (e.g., ['array', 'dynamic-programming', 'tree'])"
-                    ),
-                difficulty: z
-                    .enum(["EASY", "MEDIUM", "HARD"])
-                    .optional()
-                    .describe(
-                        "Problem difficulty level filter to show only problems of a specific difficulty"
-                    ),
-                searchKeywords: z
-                    .string()
-                    .optional()
-                    .describe(
-                        "Keywords to search in problem titles and descriptions"
-                    ),
-                limit: z
-                    .number()
-                    .optional()
-                    .default(10)
-                    .describe(
-                        "Maximum number of problems to return in a single request (for pagination)"
-                    ),
-                offset: z
-                    .number()
-                    .optional()
-                    .describe("Number of problems to skip (for pagination)")
+                description:
+                    "Searches for LeetCode problems based on multiple filter criteria including categories, tags, difficulty levels, and keywords, with pagination support",
+
+                inputSchema: {
+                    category: z
+                        .enum(PROBLEM_CATEGORIES as [string])
+                        .default("all-code-essentials")
+                        .describe(
+                            "Problem category filter (e.g., 'algorithms', 'database', 'shell') to narrow down the problem domain"
+                        ),
+                    tags: z
+                        .array(z.enum(PROBLEM_TAGS as [string]))
+                        .optional()
+                        .describe(
+                            "List of topic tags to filter problems by (e.g., ['array', 'dynamic-programming', 'tree'])"
+                        ),
+                    difficulty: z
+                        .enum(["EASY", "MEDIUM", "HARD"])
+                        .optional()
+                        .describe(
+                            "Problem difficulty level filter to show only problems of a specific difficulty"
+                        ),
+                    searchKeywords: z
+                        .string()
+                        .optional()
+                        .describe(
+                            "Keywords to search in problem titles and descriptions"
+                        ),
+                    limit: z
+                        .number()
+                        .optional()
+                        .default(10)
+                        .describe(
+                            "Maximum number of problems to return in a single request (for pagination)"
+                        ),
+                    offset: z
+                        .number()
+                        .optional()
+                        .describe("Number of problems to skip (for pagination)")
+                }
             },
             async ({
                 category,

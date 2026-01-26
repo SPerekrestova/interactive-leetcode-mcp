@@ -12,7 +12,7 @@ import { ResourceRegistry } from "./resource-registry.js";
 export class SolutionResourceRegistry extends ResourceRegistry {
     protected registerPublic(): void {
         // Global solution resource
-        this.server.resource(
+        this.server.registerResource(
             "problem-solution",
             new ResourceTemplate("solution://{topicId}", {
                 list: undefined
@@ -22,7 +22,7 @@ export class SolutionResourceRegistry extends ResourceRegistry {
                     "Provides the complete content and metadata of a specific problem solution, including the full article text, author information, and related navigation links. The topicId parameter in the URI identifies the specific solution. This ID can be obtained from the 'topicId' field in the response of the 'list_problem_solutions' tool.",
                 mimeType: "application/json"
             },
-            async (uri, variables, extra) => {
+            async (uri, variables) => {
                 const topicId = variables.topicId as string;
                 try {
                     const solutionDetail =

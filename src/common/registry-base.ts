@@ -4,7 +4,7 @@ import { LeetCodeBaseService } from "../leetcode/leetcode-base-service.js";
 /**
  * Abstract base registry class for LeetCode components that provides site type detection and authentication status checks.
  * This class defines the framework for registering different categories of components based on
- * site version (Global or CN) and authentication requirements.
+ * authentication requirements.
  */
 export abstract class RegistryBase {
     /**
@@ -13,18 +13,10 @@ export abstract class RegistryBase {
      * @param server - The MCP server instance to register components with
      * @param leetcodeService - The LeetCode service implementation to use for API calls
      */
-    constructor(
+    protected constructor(
         protected server: McpServer,
         protected leetcodeService: LeetCodeBaseService
     ) {}
-
-    /**
-     * Indicates whether the registry requires authentication.
-     * Subclasses should override this if they need authentication.
-     */
-    protected get requiresAuthentication(): boolean {
-        return false;
-    }
 
     /**
      * Determines if the current LeetCode service has valid authentication credentials.

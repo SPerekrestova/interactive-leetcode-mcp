@@ -12,7 +12,6 @@ import { registerProblemResources } from "./mcp/resources/problem-resources.js";
 import { registerSolutionResources } from "./mcp/resources/solution-resources.js";
 import { registerAuthTools } from "./mcp/tools/auth-tools.js";
 import { registerContestTools } from "./mcp/tools/contest-tools.js";
-import { registerNoteTools } from "./mcp/tools/note-tools.js";
 import { registerProblemTools } from "./mcp/tools/problem-tools.js";
 import { registerSolutionTools } from "./mcp/tools/solution-tools.js";
 import { registerSubmissionTools } from "./mcp/tools/submission-tools.js";
@@ -79,8 +78,7 @@ function getPackageJson() {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
     const packageJSONPath = join(__dirname, "..", "package.json");
-    const packageJSON = JSON.parse(readFileSync(packageJSONPath, "utf-8"));
-    return packageJSON;
+    return JSON.parse(readFileSync(packageJSONPath, "utf-8"));
 }
 
 /**
@@ -124,7 +122,6 @@ async function main() {
     registerUserTools(server, leetcodeService);
     registerContestTools(server, leetcodeService);
     registerSolutionTools(server, leetcodeService);
-    registerNoteTools(server, leetcodeService);
     registerAuthTools(server, leetcodeService);
     registerSubmissionTools(server, leetcodeService);
 
@@ -144,10 +141,6 @@ main().catch((error) => {
     if (error.message?.includes("ECONNREFUSED")) {
         logger.error(
             "Connection refused. Please check your internet connection and try again."
-        );
-    } else if (error.message?.includes("playwright")) {
-        logger.error(
-            "Playwright browser not found. Please run: npx playwright install chromium"
         );
     } else if (
         error.message?.includes("authentication") ||
