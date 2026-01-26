@@ -23,7 +23,7 @@ export class FileCredentialsStorage implements CredentialsStorage {
         try {
             const data = await fs.readFile(CREDENTIALS_FILE, "utf-8");
             return JSON.parse(data) as LeetCodeCredentials;
-        } catch (error) {
+        } catch {
             return null;
         }
     }
@@ -44,7 +44,7 @@ export class FileCredentialsStorage implements CredentialsStorage {
     async clear(): Promise<void> {
         try {
             await fs.unlink(CREDENTIALS_FILE);
-        } catch (error) {
+        } catch {
             // File doesn't exist, that's fine
         }
     }
