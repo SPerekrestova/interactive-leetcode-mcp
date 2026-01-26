@@ -8,6 +8,15 @@
 [![MCP Registry](https://badge.mcpx.dev?status=on)](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.SPerekrestova%2Finteractive-leetcode-mcp/versions/2.0.1)
 [![GitHub license](https://img.shields.io/github/license/SPerekrestova/interactive-leetcode-mcp)](https://github.com/SPerekrestova/interactive-leetcode-mcp/blob/main/LICENSE)
 
+
+## Attention!
+
+> - Current project is under active development
+> - Main branch **does not guarantee** working version
+> - Stable builds are published in npm and modelcontextprotocol registries
+> - Also available by latest release tag
+
+
 ## Features
 
 - 🔐 **Native browser authorization** - Uses your default browser with automatic cookie extraction
