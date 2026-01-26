@@ -49,5 +49,5 @@ describe("Authorization Flow Integration", () => {
         expect(cookies.LEETCODE_SESSION).toBeDefined();
 
         console.log("Authorization flow completed successfully!");
-    });
+    }, 300000); // 5 minute timeout for manual login
 });
