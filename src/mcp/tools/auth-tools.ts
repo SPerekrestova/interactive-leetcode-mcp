@@ -1,6 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import axios, { AxiosError } from "axios";
-import { Browser, chromium } from "playwright";
 import { z } from "zod";
 import { LeetCodeBaseService } from "../../leetcode/leetcode-base-service.js";
 import { LeetCodeCredentials } from "../../types/credentials.js";
@@ -38,90 +37,13 @@ interface AuthorizationResult {
 }
 
 async function authorizeLeetCode(): Promise<AuthorizationResult> {
-    let browser: Browser | null = null;
-
-    try {
-        // Launch browser with visible UI
-        browser = await chromium.launch({ headless: false });
-        const context = await browser.newContext();
-        const page = await context.newPage();
-
-        const loginUrl = LEETCODE_LOGIN_URL;
-
-        // Navigate to login page
-        await page.goto(loginUrl);
-
-        // Wait for user to complete login (detect successful login by URL change)
-        console.log("Waiting for user to log in...");
-        console.log("Please log in to LeetCode in the browser window...");
-
-        // Wait for successful login by detecting URL change away from login page
-        try {
-            await page.waitForFunction(
-                () => {
-                    const url = window.location.href;
-                    return (
-                        !url.includes("/accounts/login") &&
-                        !url.includes("/accounts/signup")
-                    );
-                },
-                { timeout: 90000 }
-            );
-
-            console.log("Login detected! Extracting cookies...");
-
-            // Give a moment for cookies to be set
-            await sleep(2000);
-        } catch (error) {
-            return {
-                success: false,
-                message: "Login timeout. Please try again.",
-                error: "User did not complete login within 90 seconds"
-            };
-        }
-
-        // Extract cookies
-        const cookies = await context.cookies();
-
-        const csrfCookie = cookies.find((c) => c.name === "csrftoken");
-        const sessionCookie = cookies.find(
-            (c) => c.name === "LEETCODE_SESSION"
-        );
-
-        if (!csrfCookie || !sessionCookie) {
-            return {
-                success: false,
-                message: "Failed to extract authentication cookies",
-                error: "csrftoken or LEETCODE_SESSION cookie not found"
-            };
-        }
-
-        // Save credentials
-        const credentials: LeetCodeCredentials = {
-            csrftoken: csrfCookie.value,
-            LEETCODE_SESSION: sessionCookie.value,
-            createdAt: new Date().toISOString()
-        };
-
-        await credentialsStorage.save(credentials);
-
-        await browser.close();
-
-        return {
-            success: true,
-            message: "Successfully authorized with LeetCode! Credentials saved."
-        };
-    } catch (error) {
-        if (browser) {
-            await browser.close();
-        }
-
-        return {
-            success: false,
-            message: "Authorization failed",
-            error: error instanceof Error ? error.message : String(error)
-        };
-    }
+    // Temporary stub - will be implemented in Task 6 with new browser flow
+    return {
+        success: false,
+        message:
+            "Authorization is being refactored to use native browser flow. Please use the new authorize_leetcode and confirm_leetcode_login tools.",
+        error: "Not implemented yet - authorization flow is being refactored"
+    };
 }
 
 async function getQuestionId(
