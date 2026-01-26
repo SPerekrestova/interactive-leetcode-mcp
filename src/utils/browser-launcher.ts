@@ -1,5 +1,5 @@
 // src/utils/browser-launcher.ts
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 
 /**
  * Opens the default browser to the specified URL using platform-specific commands
@@ -9,24 +9,22 @@ import { execSync } from "child_process";
 export function openDefaultBrowser(url: string): void {
     const platform = process.platform;
 
-    let command: string;
-
-    switch (platform) {
-        case "darwin":
-            command = `open ${url}`;
-            break;
-        case "linux":
-            command = `xdg-open ${url}`;
-            break;
-        case "win32":
-            command = `start ${url}`;
-            break;
-        default:
-            throw new Error(`Unsupported platform: ${platform}`);
-    }
-
     try {
-        execSync(command);
+        switch (platform) {
+            case "darwin":
+                execFileSync("open", [url]);
+                break;
+            case "linux":
+                execFileSync("xdg-open", [url]);
+                break;
+            case "win32":
+                // Windows 'start' is a shell built-in, not an executable
+                // Use 'cmd /c start' with proper argument separation to prevent injection
+                execFileSync("cmd", ["/c", "start", "", url]);
+                break;
+            default:
+                throw new Error(`Unsupported platform: ${platform}`);
+        }
     } catch (error) {
         throw new Error(`Failed to open browser: ${error}`);
     }

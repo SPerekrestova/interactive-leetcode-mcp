@@ -8,7 +8,7 @@ import { ToolRegistry } from "./tool-registry.js";
  * This class manages tools for accessing solutions, filtering solutions, and reading solution details.
  */
 export class SolutionToolRegistry extends ToolRegistry {
-    protected registerGlobal(): void {
+    protected registerPublic(): void {
         // Problem solutions listing tool (Global-specific)
         this.server.tool(
             "list_problem_solutions",
@@ -33,7 +33,7 @@ export class SolutionToolRegistry extends ToolRegistry {
                         "Number of solutions to skip before starting to collect results. Used in conjunction with 'limit' for implementing pagination. Default is 0 if not specified. Must be a non-negative integer."
                     ),
                 orderBy: z
-                    .enum(["HOT", " MOST_RECENT", "MOST_VOTES"])
+                    .enum(["HOT", "MOST_RECENT", "MOST_VOTES"])
                     .default("HOT")
                     .optional()
                     .describe(
@@ -161,5 +161,5 @@ export function registerSolutionTools(
     leetcodeService: LeetCodeBaseService
 ): void {
     const registry = new SolutionToolRegistry(server, leetcodeService);
-    registry.registerTools();
+    registry.register();
 }

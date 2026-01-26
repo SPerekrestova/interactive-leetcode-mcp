@@ -12,7 +12,7 @@ export class UserToolRegistry extends ToolRegistry {
         return true;
     }
 
-    protected registerGlobal(): void {
+    protected registerPublic(): void {
         // User profile tool
         this.server.tool(
             "get_user_profile",
@@ -149,7 +149,7 @@ export class UserToolRegistry extends ToolRegistry {
     /**
      * Registers tools specific to the Global LeetCode site that require authentication.
      */
-    protected override registerAuthenticatedGlobal(): void {
+    protected override registerPrivate(): void {
         // User status tool (requires authentication)
         this.server.tool(
             "get_user_status",
@@ -363,5 +363,5 @@ export function registerUserTools(
     leetcodeService: LeetCodeBaseService
 ): void {
     const registry = new UserToolRegistry(server, leetcodeService);
-    registry.registerTools();
+    registry.register();
 }

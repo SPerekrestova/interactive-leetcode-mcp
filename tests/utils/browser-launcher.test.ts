@@ -1,10 +1,10 @@
 // tests/utils/browser-launcher.test.ts
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import { describe, expect, it, vi } from "vitest";
 import { openDefaultBrowser } from "../../src/utils/browser-launcher";
 
 vi.mock("child_process", () => ({
-    execSync: vi.fn()
+    execFileSync: vi.fn()
 }));
 
 describe("browser-launcher", () => {
@@ -14,7 +14,9 @@ describe("browser-launcher", () => {
 
         openDefaultBrowser("https://leetcode.com");
 
-        expect(execSync).toHaveBeenCalledWith("open https://leetcode.com");
+        expect(execFileSync).toHaveBeenCalledWith("open", [
+            "https://leetcode.com"
+        ]);
 
         Object.defineProperty(process, "platform", { value: originalPlatform });
     });
@@ -25,7 +27,9 @@ describe("browser-launcher", () => {
 
         openDefaultBrowser("https://leetcode.com");
 
-        expect(execSync).toHaveBeenCalledWith("xdg-open https://leetcode.com");
+        expect(execFileSync).toHaveBeenCalledWith("xdg-open", [
+            "https://leetcode.com"
+        ]);
 
         Object.defineProperty(process, "platform", { value: originalPlatform });
     });
@@ -36,7 +40,12 @@ describe("browser-launcher", () => {
 
         openDefaultBrowser("https://leetcode.com");
 
-        expect(execSync).toHaveBeenCalledWith("start https://leetcode.com");
+        expect(execFileSync).toHaveBeenCalledWith("cmd", [
+            "/c",
+            "start",
+            "",
+            "https://leetcode.com"
+        ]);
 
         Object.defineProperty(process, "platform", { value: originalPlatform });
     });

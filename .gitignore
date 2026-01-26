@@ -80,6 +80,8 @@ lib/
 
 # docs
 docs/
+CLAUDE.md
+.claude
 
 **/.DS_Store
 
@@ -87,3 +89,4 @@ build/
 .vscode/settings.json
 .idea
 /.idea
+.serena
