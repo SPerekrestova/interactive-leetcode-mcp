@@ -9,7 +9,9 @@ import {
     SubmissionRequest,
     SubmissionResult
 } from "../../types/submission.js";
+import { openDefaultBrowser } from "../../utils/browser-launcher.js";
 import { credentialsStorage } from "../../utils/credentials.js";
+import { createAuthSession } from "../auth-state.js";
 import { ToolRegistry } from "./tool-registry.js";
 
 const LEETCODE_LOGIN_URL = "https://leetcode.com/accounts/login/";
@@ -28,22 +30,6 @@ const LANGUAGE_MAP: Record<string, string> = {
 
 async function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-interface AuthorizationResult {
-    success: boolean;
-    message: string;
-    error?: string;
-}
-
-async function authorizeLeetCode(): Promise<AuthorizationResult> {
-    // Temporary stub - will be implemented in Task 6 with new browser flow
-    return {
-        success: false,
-        message:
-            "Authorization is being refactored to use native browser flow. Please use the new authorize_leetcode and confirm_leetcode_login tools.",
-        error: "Not implemented yet - authorization flow is being refactored"
-    };
 }
 
 async function getQuestionId(
@@ -227,18 +213,46 @@ export class AuthToolRegistry extends ToolRegistry {
         // Authorization tool
         this.server.tool(
             "authorize_leetcode",
-            "Authorize with LeetCode by launching a browser for one-time login. Saves credentials for future use.",
+            "Opens your default browser to LeetCode login page. After logging in, use confirm_leetcode_login to complete authorization.",
             {},
             async () => {
-                const result = await authorizeLeetCode();
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: JSON.stringify(result, null, 2)
-                        }
-                    ]
-                };
+                try {
+                    // Create authorization session
+                    const sessionId = createAuthSession();
+
+                    // Open browser to LeetCode login
+                    const loginUrl = "https://leetcode.com/accounts/login/";
+                    openDefaultBrowser(loginUrl);
+
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: JSON.stringify({
+                                    status: "pending",
+                                    sessionId,
+                                    message:
+                                        "Browser opened to LeetCode login page. Please complete the login process in your browser, then use the confirm_leetcode_login tool to complete authorization.",
+                                    expiresIn: "5 minutes",
+                                    nextStep:
+                                        "Call confirm_leetcode_login when you have completed login"
+                                })
+                            }
+                        ]
+                    };
+                } catch (error) {
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: JSON.stringify({
+                                    status: "error",
+                                    message: `Could not open browser automatically: ${error}. Please manually visit https://leetcode.com/accounts/login/ and log in, then use confirm_leetcode_login.`
+                                })
+                            }
+                        ]
+                    };
+                }
             }
         );
 
