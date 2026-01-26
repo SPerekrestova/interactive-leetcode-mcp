@@ -17,7 +17,7 @@ import { ResourceRegistry } from "./resource-registry.js";
 export class ProblemResourceRegistry extends ResourceRegistry {
     protected registerPublic(): void {
         // Problem Categories resource
-        this.server.resource(
+        this.server.registerResource(
             "problem-categories",
             "categories://problems/all",
             {
@@ -25,7 +25,7 @@ export class ProblemResourceRegistry extends ResourceRegistry {
                     "A list of all problem classification categories in LeetCode platform, including difficulty levels (Easy, Medium, Hard) and algorithmic domains. These categories help organize and filter coding problems for users based on their complexity and topic area. Returns an array of all available problem categories.",
                 mimeType: "application/json"
             },
-            async (uri, extra) => {
+            async (uri) => {
                 return {
                     contents: [
                         {
@@ -39,7 +39,7 @@ export class ProblemResourceRegistry extends ResourceRegistry {
         );
 
         // Problem Tags resource
-        this.server.resource(
+        this.server.registerResource(
             "problem-tags",
             "tags://problems/all",
             {
@@ -47,7 +47,7 @@ export class ProblemResourceRegistry extends ResourceRegistry {
                     "A detailed collection of algorithmic and data structure tags used by LeetCode to categorize problems. These tags represent specific algorithms (like 'dynamic-programming', 'binary-search') or data structures (such as 'array', 'queue', 'tree') that are relevant to solving each problem. Returns an array of all available problem tags for filtering and searching problems.",
                 mimeType: "application/json"
             },
-            async (uri, extra) => {
+            async (uri) => {
                 return {
                     contents: [
                         {
@@ -61,7 +61,7 @@ export class ProblemResourceRegistry extends ResourceRegistry {
         );
 
         // Problem Languages resource
-        this.server.resource(
+        this.server.registerResource(
             "problem-langs",
             "langs://problems/all",
             {
@@ -69,7 +69,7 @@ export class ProblemResourceRegistry extends ResourceRegistry {
                     "A complete list of all programming languages officially supported by LeetCode for code submission and problem solving. Returns an array of all available programming languages on the platform.",
                 mimeType: "application/json"
             },
-            async (uri, extra) => {
+            async (uri) => {
                 return {
                     contents: [
                         {
@@ -83,7 +83,7 @@ export class ProblemResourceRegistry extends ResourceRegistry {
         );
 
         // Problem Detail resource
-        this.server.resource(
+        this.server.registerResource(
             "problem-detail",
             new ResourceTemplate("problem://{titleSlug}", {
                 list: undefined
@@ -93,7 +93,7 @@ export class ProblemResourceRegistry extends ResourceRegistry {
                     "Provides details about a specific LeetCode problem, including its description, examples, constraints, and metadata. The titleSlug parameter in the URI identifies the specific problem.",
                 mimeType: "application/json"
             },
-            async (uri, variables, extra) => {
+            async (uri, variables) => {
                 const titleSlug = variables.titleSlug as string;
                 try {
                     const problemDetail =

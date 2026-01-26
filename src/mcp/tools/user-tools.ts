@@ -14,15 +14,18 @@ export class UserToolRegistry extends ToolRegistry {
 
     protected registerPublic(): void {
         // User profile tool
-        this.server.tool(
+        this.server.registerTool(
             "get_user_profile",
-            "Retrieves profile information about a LeetCode user, including user stats, solved problems, and profile details",
             {
-                username: z
-                    .string()
-                    .describe(
-                        "LeetCode username to retrieve profile information for"
-                    )
+                description:
+                    "Retrieves profile information about a LeetCode user, including user stats, solved problems, and profile details",
+                inputSchema: {
+                    username: z
+                        .string()
+                        .describe(
+                            "LeetCode username to retrieve profile information for"
+                        )
+                }
             },
             async ({ username }) => {
                 const data =
@@ -42,22 +45,26 @@ export class UserToolRegistry extends ToolRegistry {
         );
 
         // Recent submissions tool (Global-specific)
-        this.server.tool(
+        this.server.registerTool(
             "get_recent_submissions",
-            "Retrieves a user's recent submissions on LeetCode Global, including both accepted and failed submissions with detailed metadata",
             {
-                username: z
-                    .string()
-                    .describe(
-                        "LeetCode username to retrieve recent submissions for"
-                    ),
-                limit: z
-                    .number()
-                    .optional()
-                    .default(10)
-                    .describe(
-                        "Maximum number of submissions to return (optional, defaults to server-defined limit)"
-                    )
+                description:
+                    "Retrieves a user's recent submissions on LeetCode Global, including both accepted and failed submissions with detailed metadata",
+
+                inputSchema: {
+                    username: z
+                        .string()
+                        .describe(
+                            "LeetCode username to retrieve recent submissions for"
+                        ),
+                    limit: z
+                        .number()
+                        .optional()
+                        .default(10)
+                        .describe(
+                            "Maximum number of submissions to return (optional, defaults to server-defined limit)"
+                        )
+                }
             },
             async ({ username, limit }) => {
                 try {
@@ -93,23 +100,26 @@ export class UserToolRegistry extends ToolRegistry {
             }
         );
 
-        // Recent accepted submissions tool (Global-specific)
-        this.server.tool(
+        // Recent accepted submissions tool
+        this.server.registerTool(
             "get_recent_ac_submissions",
-            "Retrieves a user's recent accepted (AC) submissions on LeetCode Global, focusing only on successfully completed problems",
             {
-                username: z
-                    .string()
-                    .describe(
-                        "LeetCode username to retrieve recent accepted submissions for"
-                    ),
-                limit: z
-                    .number()
-                    .optional()
-                    .default(10)
-                    .describe(
-                        "Maximum number of accepted submissions to return (optional, defaults to server-defined limit)"
-                    )
+                description:
+                    "Retrieves a user's recent accepted (AC) submissions on LeetCode Global, focusing only on successfully completed problems",
+                inputSchema: {
+                    username: z
+                        .string()
+                        .describe(
+                            "LeetCode username to retrieve recent accepted submissions for"
+                        ),
+                    limit: z
+                        .number()
+                        .optional()
+                        .default(10)
+                        .describe(
+                            "Maximum number of accepted submissions to return (optional, defaults to server-defined limit)"
+                        )
+                }
             },
             async ({ username, limit }) => {
                 try {
@@ -151,9 +161,12 @@ export class UserToolRegistry extends ToolRegistry {
      */
     protected override registerPrivate(): void {
         // User status tool (requires authentication)
-        this.server.tool(
+        this.server.registerTool(
             "get_user_status",
-            "Retrieves the current user's status on LeetCode, including login status, premium membership details, and user information (requires authentication)",
+            {
+                description:
+                    "Retrieves the current user's status on LeetCode, including login status, premium membership details, and user information (requires authentication)"
+            },
             async () => {
                 try {
                     const status = await this.leetcodeService.fetchUserStatus();
@@ -181,15 +194,19 @@ export class UserToolRegistry extends ToolRegistry {
         );
 
         // Submission detail tool (requires authentication)
-        this.server.tool(
+        this.server.registerTool(
             "get_problem_submission_report",
-            "Retrieves detailed information about a specific LeetCode submission by its ID, including source code, runtime stats, and test results (requires authentication)",
             {
-                id: z
-                    .number()
-                    .describe(
-                        "The numerical submission ID to retrieve detailed information for"
-                    )
+                description:
+                    "Retrieves detailed information about a specific LeetCode submission by its ID, including source code, runtime stats, and test results (requires authentication)",
+
+                inputSchema: {
+                    id: z
+                        .number()
+                        .describe(
+                            "The numerical submission ID to retrieve detailed information for"
+                        )
+                }
             },
             async ({ id }) => {
                 try {
@@ -222,34 +239,37 @@ export class UserToolRegistry extends ToolRegistry {
         );
 
         // User progress questions tool (requires authentication)
-        this.server.tool(
+        this.server.registerTool(
             "get_problem_progress",
-            "Retrieves the current user's problem-solving status with filtering options, including detailed solution history for attempted or solved questions (requires authentication)",
             {
-                offset: z
-                    .number()
-                    .default(0)
-                    .describe(
-                        "The number of questions to skip for pagination purposes"
-                    ),
-                limit: z
-                    .number()
-                    .default(100)
-                    .describe(
-                        "The maximum number of questions to return in a single request"
-                    ),
-                questionStatus: z
-                    .enum(["ATTEMPTED", "SOLVED"])
-                    .optional()
-                    .describe(
-                        "Filter by question status: 'ATTEMPTED' for questions that have been tried but not necessarily solved, 'SOLVED' for questions that have been successfully completed"
-                    ),
-                difficulty: z
-                    .array(z.string())
-                    .optional()
-                    .describe(
-                        "Filter by difficulty levels as an array (e.g., ['EASY', 'MEDIUM', 'HARD']); if not provided, questions of all difficulty levels will be returned"
-                    )
+                description:
+                    "Retrieves the current user's problem-solving status with filtering options, including detailed solution history for attempted or solved questions (requires authentication)",
+                inputSchema: {
+                    offset: z
+                        .number()
+                        .default(0)
+                        .describe(
+                            "The number of questions to skip for pagination purposes"
+                        ),
+                    limit: z
+                        .number()
+                        .default(100)
+                        .describe(
+                            "The maximum number of questions to return in a single request"
+                        ),
+                    questionStatus: z
+                        .enum(["ATTEMPTED", "SOLVED"])
+                        .optional()
+                        .describe(
+                            "Filter by question status: 'ATTEMPTED' for questions that have been tried but not necessarily solved, 'SOLVED' for questions that have been successfully completed"
+                        ),
+                    difficulty: z
+                        .array(z.string())
+                        .optional()
+                        .describe(
+                            "Filter by difficulty levels as an array (e.g., ['EASY', 'MEDIUM', 'HARD']); if not provided, questions of all difficulty levels will be returned"
+                        )
+                }
             },
             async ({ offset, limit, questionStatus, difficulty }) => {
                 try {
@@ -292,28 +312,31 @@ export class UserToolRegistry extends ToolRegistry {
         );
 
         // Global user submissions tool (requires authentication)
-        this.server.tool(
+        this.server.registerTool(
             "get_all_submissions",
-            "Retrieves a paginated list of the current user's submissions for a specific problem or all problems on LeetCode Global, with detailed submission metadata (requires authentication)",
             {
-                limit: z
-                    .number()
-                    .default(20)
-                    .describe(
-                        "Maximum number of submissions to return per page (typically defaults to 20 if not specified)"
-                    ),
-                offset: z
-                    .number()
-                    .default(0)
-                    .describe(
-                        "Number of submissions to skip for pagination purposes"
-                    ),
-                questionSlug: z
-                    .string()
-                    .optional()
-                    .describe(
-                        "Optional problem identifier (slug) to filter submissions for a specific problem (e.g., 'two-sum'); if omitted, returns submissions across all problems"
-                    )
+                description:
+                    "Retrieves a paginated list of the current user's submissions for a specific problem or all problems on LeetCode Global, with detailed submission metadata (requires authentication)",
+                inputSchema: {
+                    limit: z
+                        .number()
+                        .default(20)
+                        .describe(
+                            "Maximum number of submissions to return per page (typically defaults to 20 if not specified)"
+                        ),
+                    offset: z
+                        .number()
+                        .default(0)
+                        .describe(
+                            "Number of submissions to skip for pagination purposes"
+                        ),
+                    questionSlug: z
+                        .string()
+                        .optional()
+                        .describe(
+                            "Optional problem identifier (slug) to filter submissions for a specific problem (e.g., 'two-sum'); if omitted, returns submissions across all problems"
+                        )
+                }
             },
             async ({ questionSlug, limit, offset }) => {
                 try {

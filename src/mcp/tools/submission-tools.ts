@@ -207,29 +207,32 @@ export async function submitSolution(
 export class SubmissionToolRegistry extends ToolRegistry {
     protected registerPublic(): void {
         // Submission tool
-        this.server.tool(
+        this.server.registerTool(
             "submit_solution",
-            "Submit a solution to a LeetCode problem and get results. Returns acceptance status, runtime/memory stats, or failed test case details.",
             {
-                problemSlug: z
-                    .string()
-                    .describe('The problem slug (e.g., "two-sum")'),
-                code: z.string().describe("The solution code to submit"),
-                language: z
-                    .enum([
-                        "java",
-                        "python",
-                        "python3",
-                        "cpp",
-                        "c++",
-                        "javascript",
-                        "js",
-                        "typescript",
-                        "ts"
-                    ])
-                    .describe(
-                        "Programming language (java, python, cpp, javascript, typescript)"
-                    )
+                description:
+                    "Submit a solution to a LeetCode problem and get results. Returns acceptance status, runtime/memory stats, or failed test case details.",
+                inputSchema: {
+                    problemSlug: z
+                        .string()
+                        .describe('The problem slug (e.g., "two-sum")'),
+                    code: z.string().describe("The solution code to submit"),
+                    language: z
+                        .enum([
+                            "java",
+                            "python",
+                            "python3",
+                            "cpp",
+                            "c++",
+                            "javascript",
+                            "js",
+                            "typescript",
+                            "ts"
+                        ])
+                        .describe(
+                            "Programming language (java, python, cpp, javascript, typescript)"
+                        )
+                }
             },
             async ({ problemSlug, code, language }) => {
                 const result = await submitSolution({

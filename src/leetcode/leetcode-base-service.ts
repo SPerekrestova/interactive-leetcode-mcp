@@ -1,7 +1,6 @@
 /**
  * Base interface for LeetCode API service implementations.
- * Defines the common methods that all LeetCode service implementations must provide,
- * regardless of whether they're for the Global or China version of LeetCode.
+ * Defines the common methods that all LeetCode service implementations must provide.
  */
 export interface LeetCodeBaseService {
     /**
@@ -63,7 +62,6 @@ export interface LeetCodeBaseService {
 
     /**
      * Retrieves a user's recent submissions (both accepted and failed).
-     * Note: This may not be available on all LeetCode versions.
      *
      * @param username - LeetCode username to fetch submissions for
      * @param limit - Optional maximum number of submissions to return
@@ -154,13 +152,6 @@ export interface LeetCodeBaseService {
     isAuthenticated(): boolean;
 
     /**
-     * Determines if the current service is for the China version of LeetCode.
-     *
-     * @returns True for LeetCode CN, false for LeetCode Global
-     */
-    isCN(): boolean;
-
-    /**
      * Retrieves a list of solutions for a specific problem.
      *
      * @param questionSlug - The URL slug/identifier of the problem
@@ -175,79 +166,8 @@ export interface LeetCodeBaseService {
     /**
      * Retrieves detailed information about a specific solution.
      *
-     * @param identifier - The identifier of the solution (topicId for Global, slug for CN)
+     * @param identifier - The identifier of the solution (topicId or slug)
      * @returns Promise resolving to the solution detail data
      */
     fetchSolutionArticleDetail(identifier: string): Promise<any>;
-
-    /**
-     * Retrieves user notes from LeetCode with filtering and pagination options.
-     * Note: This feature is only available on LeetCode CN.
-     *
-     * @param options - Query parameters for filtering notes
-     * @param options.aggregateType - Type of notes to aggregate (e.g., "QUESTION_NOTE")
-     * @param options.keyword - Optional search term to filter notes
-     * @param options.orderBy - Optional sorting criteria for notes
-     * @param options.limit - Maximum number of notes to return
-     * @param options.skip - Number of notes to skip (for pagination)
-     * @returns Promise resolving to the filtered notes data
-     * @throws Error if not implemented or feature not supported
-     */
-    fetchUserNotes(options: {
-        aggregateType: string;
-        keyword?: string;
-        orderBy?: string;
-        limit?: number;
-        skip?: number;
-    }): Promise<any>;
-
-    /**
-     * Retrieves user notes for a specific question ID.
-     * Note: This feature is only available on LeetCode CN.
-     *
-     * @param questionId - The question ID to fetch notes for
-     * @param limit - Maximum number of notes to return
-     * @param skip - Number of notes to skip (for pagination)
-     * @returns Promise resolving to the notes data for the specified question
-     * @throws Error if not implemented or feature not supported
-     */
-    fetchNotesByQuestionId(
-        questionId: string,
-        limit?: number,
-        skip?: number
-    ): Promise<any>;
-
-    /**
-     * Creates a new note for a specific question on LeetCode.
-     * Note: This feature is only available on LeetCode CN.
-     *
-     * @param content - The content of the note
-     * @param noteType - The type of note (e.g., "COMMON_QUESTION")
-     * @param targetId - The ID of the target (e.g., question ID)
-     * @param summary - Optional summary of the note
-     * @returns Promise resolving to the created note data
-     * @throws Error if not implemented or feature not supported
-     */
-    createUserNote(
-        content: string,
-        noteType: string,
-        targetId: string,
-        summary: string
-    ): Promise<any>;
-
-    /**
-     * Updates an existing note on LeetCode.
-     * Note: This feature is only available on LeetCode CN.
-     *
-     * @param noteId - The ID of the note to update
-     * @param content - The new content of the note
-     * @param summary - Optional new summary of the note
-     * @returns Promise resolving to the updated note data
-     * @throws Error if not implemented or feature not supported
-     */
-    updateUserNote(
-        noteId: string,
-        content: string,
-        summary: string
-    ): Promise<any>;
 }

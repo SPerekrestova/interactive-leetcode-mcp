@@ -143,13 +143,11 @@ export class LeetCodeGlobalService implements LeetCodeBaseService {
     }
 
     async fetchDailyChallenge(): Promise<any> {
-        const dailyChallenge = await this.leetCodeApi.daily();
-        return dailyChallenge;
+        return await this.leetCodeApi.daily();
     }
 
     async fetchProblem(titleSlug: string): Promise<any> {
-        const problem = await this.leetCodeApi.problem(titleSlug);
-        return problem;
+        return await this.leetCodeApi.problem(titleSlug);
     }
 
     async fetchProblemSimplified(titleSlug: string): Promise<any> {
@@ -300,7 +298,8 @@ export class LeetCodeGlobalService implements LeetCodeBaseService {
                         articles: []
                     };
                 }
-                const data = {
+
+                return {
                     totalNum: ugcArticleSolutionArticles?.totalNum || 0,
                     hasNextPage:
                         ugcArticleSolutionArticles?.pageInfo?.hasNextPage ||
@@ -319,13 +318,11 @@ export class LeetCodeGlobalService implements LeetCodeBaseService {
                             })
                             .filter((node: any) => node && node.canSee) || []
                 };
-
-                return data;
             });
     }
 
     /**
-     * Retrieves detailed information about a specific solution on LeetCode Global.
+     * Retrieves detailed information about a specific solution on LeetCode.
      *
      * @param topicId - The topic ID of the solution
      * @returns Promise resolving to the solution detail data
@@ -343,74 +340,11 @@ export class LeetCodeGlobalService implements LeetCodeBaseService {
             });
     }
 
-    /**
-     * Note feature is not supported in LeetCode Global.
-     * This method is implemented to satisfy the interface but will always throw an error.
-     *
-     * @param options - Query parameters (not used)
-     * @throws Error indicating the feature is not supported on Global platform
-     */
-    async fetchUserNotes(options: {
-        aggregateType: string;
-        keyword?: string;
-        orderBy?: string;
-        limit?: number;
-        skip?: number;
-    }): Promise<any> {
-        throw new Error("Notes feature is not supported in LeetCode Global");
-    }
-
-    /**
-     * Note feature is not supported in LeetCode Global.
-     * This method is implemented to satisfy the interface but will always throw an error.
-     *
-     * @param questionId - The question ID (not used)
-     * @param limit - Maximum number of notes (not used)
-     * @param skip - Pagination offset (not used)
-     * @throws Error indicating the feature is not supported on Global platform
-     */
-    async fetchNotesByQuestionId(
-        questionId: string,
-        limit?: number,
-        skip?: number
-    ): Promise<any> {
-        throw new Error("Notes feature is not supported in LeetCode Global");
-    }
-
-    /**
-     * Note feature is not supported in LeetCode Global.
-     * This method is implemented to satisfy the interface but will always throw an error.
-     */
-    async createUserNote(
-        content: string,
-        noteType: string,
-        targetId: string,
-        summary: string
-    ): Promise<any> {
-        throw new Error("Notes feature is not supported in LeetCode Global");
-    }
-
-    /**
-     * Note feature is not supported in LeetCode Global.
-     * This method is implemented to satisfy the interface but will always throw an error.
-     */
-    async updateUserNote(
-        noteId: string,
-        content: string,
-        summary: string
-    ): Promise<any> {
-        throw new Error("Notes feature is not supported in LeetCode Global");
-    }
-
     isAuthenticated(): boolean {
         return (
             !!this.credential &&
             !!this.credential.csrf &&
             !!this.credential.session
         );
-    }
-
-    isCN(): boolean {
-        return false;
     }
 }

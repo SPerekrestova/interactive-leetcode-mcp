@@ -10,22 +10,26 @@ import { ToolRegistry } from "./tool-registry.js";
 export class ContestToolRegistry extends ToolRegistry {
     protected registerPublic(): void {
         // User contest ranking tool
-        this.server.tool(
+        this.server.registerTool(
             "get_user_contest_ranking",
-            "Retrieves a user's contest ranking information on LeetCode, including overall ranking, participation history, and performance metrics across contests",
             {
-                username: z
-                    .string()
-                    .describe(
-                        "LeetCode username to retrieve contest ranking information for"
-                    ),
-                attended: z
-                    .boolean()
-                    .optional()
-                    .default(true)
-                    .describe(
-                        "Whether to include only the contests the user has participated in (true) or all contests (false); defaults to true"
-                    )
+                description:
+                    "Retrieves a user's contest ranking information on LeetCode, including overall ranking, participation history, and performance metrics across contests",
+                inputSchema: {
+                    username: z
+                        .string()
+                        .describe(
+                            "LeetCode username to retrieve contest ranking information for"
+                        ),
+
+                    attended: z
+                        .boolean()
+                        .optional()
+                        .default(true)
+                        .describe(
+                            "Whether to include only the contests the user has participated in (true) or all contests (false); defaults to true"
+                        )
+                }
             },
             async ({ username, attended = true }) => {
                 try {

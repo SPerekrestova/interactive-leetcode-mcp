@@ -66,10 +66,12 @@ export class AuthToolRegistry extends ToolRegistry {
 
     protected registerPublic(): void {
         // Authorization tool
-        this.server.tool(
+        this.server.registerTool(
             "authorize_leetcode",
-            "Opens your default browser to LeetCode login page. After logging in, use confirm_leetcode_login to complete authorization.",
-            {},
+            {
+                description:
+                    "Opens your default browser to LeetCode login page. After logging in, use confirm_leetcode_login to complete authorization."
+            },
             async () => {
                 try {
                     // Create authorization session
@@ -112,15 +114,19 @@ export class AuthToolRegistry extends ToolRegistry {
         );
 
         // Confirm login tool
-        this.server.tool(
+        this.server.registerTool(
             "confirm_leetcode_login",
-            "Confirms LeetCode login completion and extracts cookies from your browser. Call this after logging in via authorize_leetcode.",
             {
-                sessionId: z
-                    .string()
-                    .describe(
-                        "Authorization session ID from authorize_leetcode"
-                    )
+                description:
+                    "Confirms LeetCode login completion and extracts cookies from your browser. Call this after logging in via authorize_leetcode.",
+
+                inputSchema: {
+                    sessionId: z
+                        .string()
+                        .describe(
+                            "Authorization session ID from authorize_leetcode"
+                        )
+                }
             },
             async ({ sessionId }) => {
                 try {

@@ -4,8 +4,7 @@ import { LeetCodeBaseService } from "../../leetcode/leetcode-base-service.js";
 
 /**
  * Base registry class for LeetCode resources that provides site type detection and authentication status checks.
- * This abstract class defines the framework for registering different categories of resources based on
- * site version (Global or CN) and authentication requirements.
+ * This abstract class defines the framework for registering different categories of resources
  */
 export abstract class ResourceRegistry extends RegistryBase {
     /**
