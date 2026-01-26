@@ -34,7 +34,7 @@ export class FileCredentialsStorage implements CredentialsStorage {
             await fs.writeFile(
                 CREDENTIALS_FILE,
                 JSON.stringify(credentials, null, 2),
-                "utf-8"
+                { encoding: "utf-8", mode: 0o600 }
             );
         } catch (error) {
             throw new Error(`Failed to save credentials: ${error}`);

@@ -1,7 +1,7 @@
 // tests/mcp/prompts/prompt-registry-base.test.ts
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PromptRegistry } from "../../../src/mcp/prompts/prompt-registry-base";
+import { PromptRegistry } from "../../../src/mcp/prompts/prompt-registry-base.js";
 
 class TestPromptRegistry extends PromptRegistry {
     protected registerPrompts(): void {
@@ -53,9 +53,9 @@ describe("PromptRegistry", () => {
         );
     });
 
-    it("should call prompt handler with arguments", () => {
+    it("should call prompt handler with arguments", async () => {
         const promptHandler = vi.mocked(mockServer.prompt).mock.calls[0][3];
-        const result = promptHandler({ param1: "value1" }, {} as any);
+        const result = await promptHandler({ param1: "value1" }, {} as any);
 
         expect(result).toEqual({
             messages: [

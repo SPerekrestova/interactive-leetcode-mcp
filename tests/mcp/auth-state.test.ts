@@ -4,7 +4,7 @@ import {
     clearAuthSession,
     createAuthSession,
     getAuthSession
-} from "../../src/mcp/auth-state";
+} from "../../src/mcp/auth-state.js";
 
 describe("AuthorizationState", () => {
     beforeEach(() => {

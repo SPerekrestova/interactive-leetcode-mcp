@@ -10,7 +10,7 @@ import { ResourceRegistry } from "./resource-registry.js";
  * This class manages resources for accessing solutions and solution details.
  */
 export class SolutionResourceRegistry extends ResourceRegistry {
-    protected registerGlobal(): void {
+    protected registerPublic(): void {
         // Global solution resource
         this.server.resource(
             "problem-solution",
@@ -71,5 +71,5 @@ export function registerSolutionResources(
     leetcodeService: LeetCodeBaseService
 ): void {
     const registry = new SolutionResourceRegistry(server, leetcodeService);
-    registry.registerResources();
+    registry.register();
 }

@@ -9,7 +9,7 @@ import { ToolRegistry } from "./tool-registry.js";
  * This class manages tools for accessing problem details, searching problems, and daily challenges.
  */
 export class ProblemToolRegistry extends ToolRegistry {
-    protected registerGlobal(): void {
+    protected registerPublic(): void {
         // Daily challenge tool
         this.server.tool(
             "get_daily_challenge",
@@ -146,5 +146,5 @@ export function registerProblemTools(
     leetcodeService: LeetCodeBaseService
 ): void {
     const registry = new ProblemToolRegistry(server, leetcodeService);
-    registry.registerTools();
+    registry.register();
 }

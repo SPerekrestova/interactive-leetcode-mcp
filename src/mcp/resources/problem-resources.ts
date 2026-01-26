@@ -15,7 +15,7 @@ import { ResourceRegistry } from "./resource-registry.js";
  * This class manages resources for accessing problem details, categories, tags, and supported languages.
  */
 export class ProblemResourceRegistry extends ResourceRegistry {
-    protected registerGlobal(): void {
+    protected registerPublic(): void {
         // Problem Categories resource
         this.server.resource(
             "problem-categories",
@@ -140,5 +140,5 @@ export function registerProblemResources(
     leetcodeService: LeetCodeBaseService
 ): void {
     const registry = new ProblemResourceRegistry(server, leetcodeService);
-    registry.registerResources();
+    registry.register();
 }

@@ -19,5 +19,5 @@ export function registerNoteTools(
     leetcodeService: LeetCodeBaseService
 ): void {
     const registry = new NoteToolRegistry(server, leetcodeService);
-    registry.registerTools();
+    registry.register();
 }

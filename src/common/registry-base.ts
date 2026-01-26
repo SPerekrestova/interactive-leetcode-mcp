@@ -39,22 +39,22 @@ export abstract class RegistryBase {
      * Registers all applicable components based on authentication status.
      */
     public register(): void {
-        this.registerGlobal();
+        this.registerPublic();
 
-        if (this.requiresAuthentication && this.isAuthenticated) {
-            this.registerAuthenticatedGlobal();
+        if (this.isAuthenticated) {
+            this.registerPrivate();
         }
     }
 
     /**
-     * Registers components that don't require authentication.
-     * Implementing classes must define this method to register their components.
+     * Registers public components that don't require authentication.
+     * Implementing classes must define this method to register their public components.
      */
-    protected registerGlobal(): void {}
+    protected registerPublic(): void {}
 
     /**
-     * Registers components that require authentication.
+     * Registers private components that require authentication.
      * Implementing classes must define this method to register their authenticated components.
      */
-    protected registerAuthenticatedGlobal(): void {}
+    protected registerPrivate(): void {}
 }
