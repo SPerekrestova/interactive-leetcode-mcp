@@ -55,7 +55,13 @@ npm link
 
 ### Claude Code & Claude Desktop
 
-Add to your MCP configuration file (`~/.config/claude-code/mcp.json`) or (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+You can execute this command in CLI
+
+```bash
+claude mcp add --transport stdio leetcode -- npx -y @sperekrestova/interactive-leetcode-mcp@latest
+```
+
+Or add to your MCP configuration file (`~/.config/claude-code/mcp.json`) or (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
 ```json
 {
