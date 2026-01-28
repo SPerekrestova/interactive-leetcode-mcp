@@ -2,14 +2,14 @@ import {
     McpServer,
     ResourceTemplate
 } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { LeetCodeBaseService } from "../../leetcode/leetcode-base-service.js";
-import { ResourceRegistry } from "./resource-registry.js";
+import { RegistryBase } from "../../common/registry-base.js";
+import { LeetcodeServiceInterface } from "../../leetcode/leetcode-service-interface.js";
 
 /**
  * Solution resource registry class that handles registration of LeetCode solution-related resources.
  * This class manages resources for accessing solutions and solution details.
  */
-export class SolutionResourceRegistry extends ResourceRegistry {
+export class SolutionResourceRegistry extends RegistryBase {
     protected registerPublic(): void {
         // Global solution resource
         this.server.registerResource(
@@ -68,7 +68,7 @@ export class SolutionResourceRegistry extends ResourceRegistry {
  */
 export function registerSolutionResources(
     server: McpServer,
-    leetcodeService: LeetCodeBaseService
+    leetcodeService: LeetcodeServiceInterface
 ): void {
     const registry = new SolutionResourceRegistry(server, leetcodeService);
     registry.register();

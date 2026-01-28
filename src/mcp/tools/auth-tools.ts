@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import axios from "axios";
 import { z } from "zod";
-import { LeetCodeBaseService } from "../../leetcode/leetcode-base-service.js";
+import { LeetcodeServiceInterface } from "../../leetcode/leetcode-service-interface.js";
 import { openDefaultBrowser } from "../../utils/browser-launcher.js";
 import { credentialsStorage } from "../../utils/credentials.js";
 import { ToolRegistry } from "./tool-registry.js";
@@ -305,7 +305,7 @@ export class AuthToolRegistry extends ToolRegistry {
 
 export function registerAuthTools(
     server: McpServer,
-    leetcodeService: LeetCodeBaseService
+    leetcodeService: LeetcodeServiceInterface
 ): void {
     const registry = new AuthToolRegistry(server, leetcodeService);
     registry.register();

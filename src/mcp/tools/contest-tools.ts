@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { LeetCodeBaseService } from "../../leetcode/leetcode-base-service.js";
+import { LeetcodeServiceInterface } from "../../leetcode/leetcode-service-interface.js";
 import { ToolRegistry } from "./tool-registry.js";
 
 /**
@@ -75,7 +75,7 @@ export class ContestToolRegistry extends ToolRegistry {
  */
 export function registerContestTools(
     server: McpServer,
-    leetcodeService: LeetCodeBaseService
+    leetcodeService: LeetcodeServiceInterface
 ): void {
     const registry = new ContestToolRegistry(server, leetcodeService);
     registry.register();

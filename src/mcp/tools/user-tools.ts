@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { LeetCodeBaseService } from "../../leetcode/leetcode-base-service.js";
+import { LeetcodeServiceInterface } from "../../leetcode/leetcode-service-interface.js";
 import { ToolRegistry } from "./tool-registry.js";
 
 /**
@@ -159,8 +159,7 @@ export class UserToolRegistry extends ToolRegistry {
     /**
      * Registers tools specific to the Global LeetCode site that require authentication.
      */
-    protected override registerPrivate(): void {
-        // User status tool (requires authentication)
+    protected registerAuthenticated(): void {
         this.server.registerTool(
             "get_user_status",
             {
@@ -383,7 +382,7 @@ export class UserToolRegistry extends ToolRegistry {
  */
 export function registerUserTools(
     server: McpServer,
-    leetcodeService: LeetCodeBaseService
+    leetcodeService: LeetcodeServiceInterface
 ): void {
     const registry = new UserToolRegistry(server, leetcodeService);
     registry.register();

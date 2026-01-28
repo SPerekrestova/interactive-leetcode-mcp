@@ -25,6 +25,7 @@
         "test:all": "vitest run",
         "test:coverage": "vitest run --coverage",
         "test:watch": "vitest watch",
+        "test:types": "tsc -p tsconfig.test.json",
         "build": "tsc && chmod u+x build/index.js",
         "start": "node build/index.js",
         "dev": "tsc-watch --onSuccess \"node build/index.js\"",

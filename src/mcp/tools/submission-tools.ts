@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import axios, { AxiosError } from "axios";
 import { z } from "zod";
-import { LeetCodeBaseService } from "../../leetcode/leetcode-base-service.js";
+import { LeetcodeServiceInterface } from "../../leetcode/leetcode-service-interface.js";
 import { LeetCodeCredentials } from "../../types/credentials.js";
 import {
     LeetCodeCheckResponse,
@@ -261,7 +261,7 @@ export class SubmissionToolRegistry extends ToolRegistry {
  */
 export function registerSubmissionTools(
     server: McpServer,
-    leetcodeService: LeetCodeBaseService
+    leetcodeService: LeetcodeServiceInterface
 ): void {
     const registry = new SubmissionToolRegistry(server, leetcodeService);
     registry.register();

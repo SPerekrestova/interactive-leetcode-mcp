@@ -1,7 +1,7 @@
 // tests/utils/browser-launcher.test.ts
 import { execFileSync } from "child_process";
 import { describe, expect, it, vi } from "vitest";
-import { openDefaultBrowser } from "../../src/utils/browser-launcher";
+import { openDefaultBrowser } from "../../src/utils/browser-launcher.js";
 
 vi.mock("child_process", () => ({
     execFileSync: vi.fn()

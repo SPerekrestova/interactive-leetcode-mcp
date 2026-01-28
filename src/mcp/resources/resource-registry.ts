@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { RegistryBase } from "../../common/registry-base.js";
-import { LeetCodeBaseService } from "../../leetcode/leetcode-base-service.js";
+import { LeetcodeServiceInterface } from "../../leetcode/leetcode-service-interface.js";
 
 /**
  * Base registry class for LeetCode resources that provides site type detection and authentication status checks.
@@ -15,7 +15,7 @@ export abstract class ResourceRegistry extends RegistryBase {
      */
     constructor(
         protected server: McpServer,
-        protected leetcodeService: LeetCodeBaseService
+        protected leetcodeService: LeetcodeServiceInterface
     ) {
         super(server, leetcodeService);
     }

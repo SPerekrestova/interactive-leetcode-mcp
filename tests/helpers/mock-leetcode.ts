@@ -3,7 +3,7 @@
  * Provides mock implementations of all LeetCode API methods
  */
 import { vi } from "vitest";
-import type { LeetCodeBaseService } from "../../src/leetcode/leetcode-base-service.js";
+import type { LeetcodeServiceInterface } from "../../src/leetcode/leetcode-service-interface.js";
 import {
     DAILY_CHALLENGE,
     SEARCH_RESULTS,
@@ -26,7 +26,7 @@ import {
  * expect(mockService.fetchProblemSimplified).toHaveBeenCalledWith("two-sum");
  * ```
  */
-export function createMockLeetCodeService(): LeetCodeBaseService {
+export function createMockLeetCodeService(): LeetcodeServiceInterface {
     return {
         // Problem methods
         fetchDailyChallenge: vi.fn().mockResolvedValue(DAILY_CHALLENGE),
@@ -55,6 +55,11 @@ export function createMockLeetCodeService(): LeetCodeBaseService {
         searchProblems: vi.fn().mockResolvedValue(SEARCH_RESULTS),
 
         // User methods
+        fetchUserStatus: vi.fn().mockResolvedValue({
+            username: "testuser",
+            isSignedIn: true
+        }),
+
         fetchUserProfile: vi.fn().mockResolvedValue({
             username: "testuser",
             profile: {
@@ -93,6 +98,21 @@ export function createMockLeetCodeService(): LeetCodeBaseService {
             }
         ]),
 
+        fetchUserAllSubmissions: vi.fn().mockResolvedValue({
+            submissions: []
+        }),
+
+        fetchUserProgressQuestionList: vi.fn().mockResolvedValue({
+            questions: []
+        }),
+
+        fetchUserSubmissionDetail: vi.fn().mockResolvedValue({
+            id: 1,
+            code: "var twoSum = function(nums, target) { ... }",
+            runtime: "100 ms",
+            memory: "42.5 MB"
+        }),
+
         // Contest methods
         fetchUserContestRanking: vi.fn().mockResolvedValue({
             userContestRanking: {
@@ -116,7 +136,7 @@ export function createMockLeetCodeService(): LeetCodeBaseService {
             }
         ]),
 
-        fetchSolutionArticle: vi.fn().mockResolvedValue({
+        fetchSolutionArticleDetail: vi.fn().mockResolvedValue({
             topicId: 12345,
             title: "Two Sum - Solution",
             content: "# Approach 1: Brute Force\n\n...",
@@ -139,14 +159,14 @@ export function createMockLeetCodeService(): LeetCodeBaseService {
 
         // Authentication
         isAuthenticated: vi.fn().mockReturnValue(false)
-    } as unknown as LeetCodeBaseService;
+    } as unknown as LeetcodeServiceInterface;
 }
 
 /**
  * Creates a mock authenticated LeetCode service
  * Same as createMockLeetCodeService but with isAuthenticated returning true
  */
-export function createMockAuthenticatedService(): LeetCodeBaseService {
+export function createMockAuthenticatedService(): LeetcodeServiceInterface {
     const service = createMockLeetCodeService();
     vi.mocked(service.isAuthenticated).mockReturnValue(true);
     return service;
@@ -156,7 +176,7 @@ export function createMockAuthenticatedService(): LeetCodeBaseService {
  * Creates a mock LeetCode service that throws errors
  * Useful for testing error handling
  */
-export function createMockFailingService(): LeetCodeBaseService {
+export function createMockFailingService(): LeetcodeServiceInterface {
     const error = new Error("Mock API Error");
 
     return {
@@ -164,13 +184,17 @@ export function createMockFailingService(): LeetCodeBaseService {
         fetchProblem: vi.fn().mockRejectedValue(error),
         fetchProblemSimplified: vi.fn().mockRejectedValue(error),
         searchProblems: vi.fn().mockRejectedValue(error),
+        fetchUserStatus: vi.fn().mockRejectedValue(error),
         fetchUserProfile: vi.fn().mockRejectedValue(error),
         fetchUserRecentSubmissions: vi.fn().mockRejectedValue(error),
         fetchUserRecentACSubmissions: vi.fn().mockRejectedValue(error),
+        fetchUserAllSubmissions: vi.fn().mockRejectedValue(error),
+        fetchUserProgressQuestionList: vi.fn().mockRejectedValue(error),
+        fetchUserSubmissionDetail: vi.fn().mockRejectedValue(error),
         fetchUserContestRanking: vi.fn().mockRejectedValue(error),
         fetchQuestionSolutionArticles: vi.fn().mockRejectedValue(error),
-        fetchSolutionArticle: vi.fn().mockRejectedValue(error),
+        fetchSolutionArticleDetail: vi.fn().mockRejectedValue(error),
         submitSolution: vi.fn().mockRejectedValue(error),
         isAuthenticated: vi.fn().mockReturnValue(false)
-    } as unknown as LeetCodeBaseService;
+    } as unknown as LeetcodeServiceInterface;
 }

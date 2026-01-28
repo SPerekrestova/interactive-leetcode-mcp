@@ -4,7 +4,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { LeetCodeBaseService } from "../../src/leetcode/leetcode-base-service.js";
+import type { LeetcodeServiceInterface } from "../../src/leetcode/leetcode-service-interface.js";
 
 /**
  * Configuration for test client setup
@@ -123,7 +123,7 @@ export async function createTestClient(
  * ```
  */
 export async function createTestClientWithServer(
-    leetcodeService: LeetCodeBaseService
+    leetcodeService: LeetcodeServiceInterface
 ): Promise<TestClientPair> {
     const { server, client, cleanup } = await createTestClient({
         serverName: "LeetCode MCP Test Server",
@@ -153,10 +153,10 @@ export async function createTestClientWithServer(
         await import("../../src/mcp/prompts/auth-prompts.js");
 
     // Register learning prompts
-    registerLearningPrompts(server);
+    registerLearningPrompts(server, leetcodeService);
 
     // Register auth prompts
-    registerAuthPrompts(server);
+    registerAuthPrompts(server, leetcodeService);
 
     // Register all tools
     registerProblemTools(server, leetcodeService);

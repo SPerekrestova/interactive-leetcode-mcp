@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { Credential, LeetCode } from "leetcode-query";
 import minimist from "minimist";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { LeetCodeBaseService } from "./leetcode/leetcode-base-service.js";
-import { LeetCodeServiceFactory } from "./leetcode/leetcode-service-factory.js";
+import { LeetCodeGlobalService } from "./leetcode/leetcode-global-service.js";
+import { LeetcodeServiceInterface } from "./leetcode/leetcode-service-interface.js";
 import { registerAuthPrompts } from "./mcp/prompts/auth-prompts.js";
 import { registerLearningPrompts } from "./mcp/prompts/learning-prompts.js";
 import { registerProblemResources } from "./mcp/resources/problem-resources.js";
@@ -113,14 +114,17 @@ async function main() {
         version: packageJSON.version
     });
 
-    const leetcodeService: LeetCodeBaseService =
-        await LeetCodeServiceFactory.createService();
+    const credential: Credential = new Credential();
+    const leetcodeService: LeetcodeServiceInterface = new LeetCodeGlobalService(
+        new LeetCode(credential),
+        credential
+    );
 
     // Register MCP prompts for learning mode and workspace guidance
-    registerLearningPrompts(server);
+    registerLearningPrompts(server, leetcodeService);
 
     // Register MCP prompts for authentication guidance
-    registerAuthPrompts(server);
+    registerAuthPrompts(server, leetcodeService);
 
     registerProblemTools(server, leetcodeService);
     registerUserTools(server, leetcodeService);

@@ -7,14 +7,14 @@ import {
     PROBLEM_TAGS,
     PROGRAMMING_LANGS
 } from "../../common/constants.js";
-import { LeetCodeBaseService } from "../../leetcode/leetcode-base-service.js";
-import { ResourceRegistry } from "./resource-registry.js";
+import { RegistryBase } from "../../common/registry-base.js";
+import { LeetcodeServiceInterface } from "../../leetcode/leetcode-service-interface.js";
 
 /**
  * Problem resource registry class that handles registration of LeetCode problem-related resources.
  * This class manages resources for accessing problem details, categories, tags, and supported languages.
  */
-export class ProblemResourceRegistry extends ResourceRegistry {
+export class ProblemResourceRegistry extends RegistryBase {
     protected registerPublic(): void {
         // Problem Categories resource
         this.server.registerResource(
@@ -137,7 +137,7 @@ export class ProblemResourceRegistry extends ResourceRegistry {
  */
 export function registerProblemResources(
     server: McpServer,
-    leetcodeService: LeetCodeBaseService
+    leetcodeService: LeetcodeServiceInterface
 ): void {
     const registry = new ProblemResourceRegistry(server, leetcodeService);
     registry.register();

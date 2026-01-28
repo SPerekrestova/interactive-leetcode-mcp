@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { PROBLEM_CATEGORIES, PROBLEM_TAGS } from "../../common/constants.js";
-import { LeetCodeBaseService } from "../../leetcode/leetcode-base-service.js";
+import { LeetcodeServiceInterface } from "../../leetcode/leetcode-service-interface.js";
 import { ToolRegistry } from "./tool-registry.js";
 
 /**
@@ -153,7 +153,7 @@ export class ProblemToolRegistry extends ToolRegistry {
  */
 export function registerProblemTools(
     server: McpServer,
-    leetcodeService: LeetCodeBaseService
+    leetcodeService: LeetcodeServiceInterface
 ): void {
     const registry = new ProblemToolRegistry(server, leetcodeService);
     registry.register();

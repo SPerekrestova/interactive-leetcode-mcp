@@ -2,7 +2,7 @@
  * MCP Protocol Integration Tests
  * Tests that verify MCP protocol compliance and basic server functionality
  */
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 import type { TestClientPair } from "../helpers/test-client.js";
 import { createTestClient } from "../helpers/test-client.js";
@@ -83,7 +83,7 @@ describe("MCP Protocol Integration", () => {
         it(
             "should call registered tool",
             async () => {
-                const result = await testClient.client.callTool({
+                const result: any = await testClient.client.callTool({
                     name: "test_echo",
                     arguments: { message: "Hello MCP!" }
                 });
@@ -98,7 +98,7 @@ describe("MCP Protocol Integration", () => {
         it(
             "should handle tool with no arguments",
             async () => {
-                const result = await testClient.client.callTool({
+                const result: any = await testClient.client.callTool({
                     name: "test_echo",
                     arguments: {}
                 });
@@ -151,7 +151,7 @@ describe("MCP Protocol Integration", () => {
         it(
             "should read registered resource",
             async () => {
-                const result = await testClient.client.readResource({
+                const result: any = await testClient.client.readResource({
                     uri: "test://data"
                 });
 
@@ -207,7 +207,7 @@ describe("MCP Protocol Integration", () => {
         it(
             "should get prompt with arguments",
             async () => {
-                const result = await testClient.client.getPrompt({
+                const result: any = await testClient.client.getPrompt({
                     name: "test-prompt",
                     arguments: { topic: "testing" }
                 });

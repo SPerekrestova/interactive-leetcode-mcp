@@ -2,7 +2,7 @@
  * Base interface for LeetCode API service implementations.
  * Defines the common methods that all LeetCode service implementations must provide.
  */
-export interface LeetCodeBaseService {
+export interface LeetcodeServiceInterface {
     /**
      * Retrieves a user's profile information including stats, badges, and contributions.
      *

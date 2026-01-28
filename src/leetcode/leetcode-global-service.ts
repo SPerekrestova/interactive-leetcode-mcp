@@ -3,14 +3,14 @@ import logger from "../utils/logger.js";
 import { SEARCH_PROBLEMS_QUERY } from "./graphql/search-problems.js";
 import { SOLUTION_ARTICLE_DETAIL_QUERY } from "./graphql/solution-article-detail.js";
 import { SOLUTION_ARTICLES_QUERY } from "./graphql/solution-articles.js";
-import { LeetCodeBaseService } from "./leetcode-base-service.js";
+import { LeetcodeServiceInterface } from "./leetcode-service-interface.js";
 
 /**
  * LeetCode Global API Service Implementation
  *
  * This class provides methods to interact with the LeetCode Global API
  */
-export class LeetCodeGlobalService implements LeetCodeBaseService {
+export class LeetCodeGlobalService implements LeetcodeServiceInterface {
     private readonly leetCodeApi: LeetCode;
     private readonly credential: Credential;
 

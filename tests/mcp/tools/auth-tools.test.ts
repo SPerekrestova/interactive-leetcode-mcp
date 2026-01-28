@@ -2,7 +2,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import axios from "axios";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { LeetCodeBaseService } from "../../../src/leetcode/leetcode-base-service.js";
+import type { LeetcodeServiceInterface } from "../../../src/leetcode/leetcode-service-interface.js";
 import { AuthToolRegistry } from "../../../src/mcp/tools/auth-tools.js";
 import { credentialsStorage } from "../../../src/utils/credentials.js";
 
@@ -22,7 +22,7 @@ vi.mock("../../../src/utils/credentials.js", () => ({
 
 describe("AuthToolRegistry", () => {
     let mockServer: McpServer;
-    let mockLeetCodeService: LeetCodeBaseService;
+    let mockLeetCodeService: LeetcodeServiceInterface;
     let registry: AuthToolRegistry;
     let registeredTools: Map<
         string,
@@ -48,7 +48,7 @@ describe("AuthToolRegistry", () => {
 
         mockLeetCodeService = {
             isAuthenticated: vi.fn().mockReturnValue(false)
-        } as unknown as LeetCodeBaseService;
+        } as unknown as LeetcodeServiceInterface;
 
         registry = new AuthToolRegistry(mockServer, mockLeetCodeService);
         // Trigger registration

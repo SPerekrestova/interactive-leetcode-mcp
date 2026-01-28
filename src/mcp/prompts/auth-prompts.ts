@@ -1,18 +1,20 @@
 // src/mcp/prompts/auth-prompts.ts
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { PromptRegistry } from "./prompt-registry-base.js";
+import { RegistryBase } from "../../common/registry-base.js";
+import { LeetcodeServiceInterface } from "../../leetcode/leetcode-service-interface.js";
 
 /**
  * Registry for LeetCode authentication prompts
  * Provides prompts that guide AI agents through the authentication process
  */
-export class AuthPromptRegistry extends PromptRegistry {
-    protected registerPrompts(): void {
-        // Authentication guide prompt (global)
-        this.registerPrompt(
+export class AuthPromptRegistry extends RegistryBase {
+    protected registerPublic(): void {
+        this.server.registerPrompt(
             "leetcode_authentication_guide",
-            "Provides comprehensive instructions for guiding users through LeetCode authentication with manual cookie extraction",
-            [],
+            {
+                description:
+                    "Provides comprehensive instructions for guiding users through LeetCode authentication with manual cookie extraction"
+            },
             () => {
                 const promptText = `# LeetCode Authentication Guide for AI Agents
 
@@ -182,6 +184,9 @@ Once you're logged in, I'll walk you through getting two cookie values we need f
 /**
  * Registers all authentication-related prompts
  */
-export function registerAuthPrompts(server: McpServer): void {
-    new AuthPromptRegistry(server);
+export function registerAuthPrompts(
+    server: McpServer,
+    leetcodeService: LeetcodeServiceInterface
+): void {
+    new AuthPromptRegistry(server, leetcodeService).register();
 }

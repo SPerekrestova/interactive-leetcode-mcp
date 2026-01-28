@@ -2,24 +2,25 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthPromptRegistry } from "../../../src/mcp/prompts/auth-prompts.js";
+import { createMockLeetCodeService } from "../../helpers/mock-leetcode.js";
 
 describe("AuthPromptRegistry", () => {
     let mockServer: McpServer;
 
     beforeEach(() => {
         mockServer = {
-            prompt: vi.fn()
+            registerPrompt: vi.fn()
         } as unknown as McpServer;
 
         // Instantiate registry to trigger registration
-        new AuthPromptRegistry(mockServer);
+        const mockService = createMockLeetCodeService();
+        new AuthPromptRegistry(mockServer, mockService).register();
     });
 
     describe("Prompt Registration", () => {
         it("should register leetcode_authentication_guide prompt", () => {
-            expect(mockServer.prompt).toHaveBeenCalledWith(
+            expect(mockServer.registerPrompt).toHaveBeenCalledWith(
                 "leetcode_authentication_guide",
-                expect.any(String),
                 expect.any(Object),
                 expect.any(Function)
             );
@@ -27,25 +28,25 @@ describe("AuthPromptRegistry", () => {
 
         it("should register prompt with no parameters", () => {
             const call = vi
-                .mocked(mockServer.prompt)
+                .mocked(mockServer.registerPrompt)
                 .mock.calls.find(
                     (call) => call[0] === "leetcode_authentication_guide"
                 );
 
             expect(call).toBeDefined();
-            const paramSchema = call![2];
-            // Empty parameter array results in empty object schema
-            expect(paramSchema).toEqual({});
+            const config = call![1];
+            // Empty parameter array results in empty or undefined argsSchema
+            expect(config.argsSchema).toBeUndefined();
         });
 
         it("should include descriptive prompt description", () => {
             const call = vi
-                .mocked(mockServer.prompt)
+                .mocked(mockServer.registerPrompt)
                 .mock.calls.find(
                     (call) => call[0] === "leetcode_authentication_guide"
                 );
 
-            const description = call![1];
+            const description = call![1].description;
             expect(description).toContain("authentication");
             expect(description).toContain("cookie");
         });
@@ -54,11 +55,11 @@ describe("AuthPromptRegistry", () => {
     describe("Prompt Generation", () => {
         it("should generate authentication guide with comprehensive instructions", async () => {
             const call = vi
-                .mocked(mockServer.prompt)
+                .mocked(mockServer.registerPrompt)
                 .mock.calls.find(
                     (call) => call[0] === "leetcode_authentication_guide"
                 );
-            const handler = call![3];
+            const handler = call![2];
 
             const result = await handler({}, {} as any);
 
@@ -70,11 +71,11 @@ describe("AuthPromptRegistry", () => {
 
         it("should include DevTools navigation instructions", async () => {
             const call = vi
-                .mocked(mockServer.prompt)
+                .mocked(mockServer.registerPrompt)
                 .mock.calls.find(
                     (call) => call[0] === "leetcode_authentication_guide"
                 );
-            const handler = call![3];
+            const handler = call![2];
 
             const result = await handler({}, {} as any);
             const content = result.messages[0].content;
@@ -89,11 +90,11 @@ describe("AuthPromptRegistry", () => {
 
         it("should include cookie names to extract", async () => {
             const call = vi
-                .mocked(mockServer.prompt)
+                .mocked(mockServer.registerPrompt)
                 .mock.calls.find(
                     (call) => call[0] === "leetcode_authentication_guide"
                 );
-            const handler = call![3];
+            const handler = call![2];
 
             const result = await handler({}, {} as any);
             const content = result.messages[0].content;
@@ -106,11 +107,11 @@ describe("AuthPromptRegistry", () => {
 
         it("should include authentication flow steps", async () => {
             const call = vi
-                .mocked(mockServer.prompt)
+                .mocked(mockServer.registerPrompt)
                 .mock.calls.find(
                     (call) => call[0] === "leetcode_authentication_guide"
                 );
-            const handler = call![3];
+            const handler = call![2];
 
             const result = await handler({}, {} as any);
             const content = result.messages[0].content;
@@ -124,11 +125,11 @@ describe("AuthPromptRegistry", () => {
 
         it("should include error handling guidance", async () => {
             const call = vi
-                .mocked(mockServer.prompt)
+                .mocked(mockServer.registerPrompt)
                 .mock.calls.find(
                     (call) => call[0] === "leetcode_authentication_guide"
                 );
-            const handler = call![3];
+            const handler = call![2];
 
             const result = await handler({}, {} as any);
             const content = result.messages[0].content;
@@ -141,11 +142,11 @@ describe("AuthPromptRegistry", () => {
 
         it("should include tone guidance for AI agents", async () => {
             const call = vi
-                .mocked(mockServer.prompt)
+                .mocked(mockServer.registerPrompt)
                 .mock.calls.find(
                     (call) => call[0] === "leetcode_authentication_guide"
                 );
-            const handler = call![3];
+            const handler = call![2];
 
             const result = await handler({}, {} as any);
             const content = result.messages[0].content;

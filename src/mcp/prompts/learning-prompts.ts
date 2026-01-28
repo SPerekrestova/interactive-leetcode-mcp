@@ -1,35 +1,35 @@
 // src/mcp/prompts/learning-prompts.ts
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { PromptRegistry } from "./prompt-registry-base.js";
+import { z } from "zod";
+import { RegistryBase } from "../../common/registry-base.js";
+import { LeetcodeServiceInterface } from "../../leetcode/leetcode-service-interface.js";
 
 /**
  * Registry for LeetCode learning mode prompts
  * Provides prompts that guide AI agent behavior for workspace setup and learning mode
  */
-export class LearningPromptRegistry extends PromptRegistry {
-    protected registerPrompts(): void {
+export class LearningPromptRegistry extends RegistryBase {
+    protected registerPublic(): void {
         // Workspace setup prompt
-        this.registerPrompt(
+        this.server.registerPrompt(
             "leetcode_workspace_setup",
-            "Guides the agent to create a workspace file with code template for a LeetCode problem",
-            [
-                {
-                    name: "language",
-                    description:
-                        "Programming language (e.g., Python, Java, C++)",
-                    required: true
-                },
-                {
-                    name: "problemSlug",
-                    description: "LeetCode problem slug (e.g., two-sum)",
-                    required: true
-                },
-                {
-                    name: "codeTemplate",
-                    description: "Code template to paste into the file",
-                    required: true
+            {
+                description:
+                    "Guides the agent to create a workspace file with code template for a LeetCode problem",
+                argsSchema: {
+                    language: z
+                        .string()
+                        .describe(
+                            "Programming language (e.g., Python, Java, C++)"
+                        ),
+                    problemSlug: z
+                        .string()
+                        .describe("LeetCode problem slug (e.g., two-sum)"),
+                    codeTemplate: z
+                        .string()
+                        .describe("Code template to paste into the file")
                 }
-            ],
+            },
             (args) => {
                 const { language, problemSlug, codeTemplate } = args;
                 const extension = this.getFileExtension(language || "");
@@ -63,10 +63,12 @@ After creating the file, inform the user that the workspace is ready and they ca
         );
 
         // Learning mode prompt (global, always active)
-        this.registerPrompt(
+        this.server.registerPrompt(
             "leetcode_learning_mode",
-            "Enforces learning-guided mode where the agent provides hints before solutions",
-            [],
+            {
+                description:
+                    "Enforces learning-guided mode where the agent provides hints before solutions"
+            },
             () => {
                 const promptText = `You are in learning-guided mode for LeetCode practice. Follow these guidelines:
 
@@ -107,21 +109,20 @@ Remember: The best learning happens when users solve problems themselves with gu
         );
 
         // Problem workflow prompt
-        this.registerPrompt(
+        this.server.registerPrompt(
             "leetcode_problem_workflow",
-            "Guides the complete problem-solving workflow from fetch to submission",
-            [
-                {
-                    name: "problemSlug",
-                    description: "LeetCode problem slug",
-                    required: true
-                },
-                {
-                    name: "difficulty",
-                    description: "Problem difficulty (Easy/Medium/Hard)",
-                    required: true
+            {
+                description:
+                    "Guides the complete problem-solving workflow from fetch to submission",
+                argsSchema: {
+                    problemSlug: z
+                        .string()
+                        .describe("LeetCode problem slug (e.g., two-sum)"),
+                    difficulty: z
+                        .string()
+                        .describe("Problem difficulty (Easy/Medium/Hard)")
                 }
-            ],
+            },
             (args) => {
                 const { problemSlug, difficulty } = args;
 
@@ -208,6 +209,9 @@ Keep the user engaged and learning at each step. Adjust the level of guidance ba
 /**
  * Registers learning mode prompts with the MCP server
  */
-export function registerLearningPrompts(server: McpServer): void {
-    new LearningPromptRegistry(server);
+export function registerLearningPrompts(
+    server: McpServer,
+    leetcodeService: LeetcodeServiceInterface
+): void {
+    new LearningPromptRegistry(server, leetcodeService).register();
 }

@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { LeetCodeBaseService } from "../leetcode/leetcode-base-service.js";
+import { LeetcodeServiceInterface } from "../leetcode/leetcode-service-interface.js";
 
 /**
  * Abstract base registry class for LeetCode components that provides site type detection and authentication status checks.
@@ -13,9 +13,9 @@ export abstract class RegistryBase {
      * @param server - The MCP server instance to register components with
      * @param leetcodeService - The LeetCode service implementation to use for API calls
      */
-    protected constructor(
+    constructor(
         protected server: McpServer,
-        protected leetcodeService: LeetCodeBaseService
+        protected leetcodeService: LeetcodeServiceInterface
     ) {}
 
     /**
@@ -23,7 +23,7 @@ export abstract class RegistryBase {
      *
      * @returns True if authenticated, false otherwise
      */
-    protected get isAuthenticated(): boolean {
+    get isAuthenticated(): boolean {
         return this.leetcodeService.isAuthenticated();
     }
 
@@ -32,21 +32,20 @@ export abstract class RegistryBase {
      */
     public register(): void {
         this.registerPublic();
-
         if (this.isAuthenticated) {
-            this.registerPrivate();
+            this.registerAuthenticated();
         }
     }
 
     /**
-     * Registers public components that don't require authentication.
-     * Implementing classes must define this method to register their public components.
+     * Hook for registering components that don't require authentication.
+     * Override this in subclasses.
      */
     protected registerPublic(): void {}
 
     /**
-     * Registers private components that require authentication.
-     * Implementing classes must define this method to register their authenticated components.
+     * Hook for registering components that require authentication.
+     * Override this in subclasses.
      */
-    protected registerPrivate(): void {}
+    protected registerAuthenticated(): void {}
 }
