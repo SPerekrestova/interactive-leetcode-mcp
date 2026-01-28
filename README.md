@@ -1,7 +1,5 @@
 # Interactive LeetCode MCP
 
-> Interactive LeetCode practice with AI-guided learning through Claude
-
 [![npm version](https://img.shields.io/npm/v/@sperekrestova/interactive-leetcode-mcp.svg)](https://www.npmjs.com/package/@sperekrestova/interactive-leetcode-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/@sperekrestova/interactive-leetcode-mcp.svg)](https://www.npmjs.com/package/@sperekrestova/interactive-leetcode-mcp)
 [![GitHub stars](https://img.shields.io/github/stars/SPerekrestova/interactive-leetcode-mcp)](https://github.com/SPerekrestova/interactive-leetcode-mcp)
@@ -16,6 +14,8 @@
 > - Also available by latest release tag
 
 ## Features
+
+<video src="https://github.com/user-attachments/assets/935bbc9f-7199-417e-8987-fd6cd60b8fb5"></video>
 
 - 🔐 **AI-guided authentication** - Claude walks you through one-time credential setup
 - 🎓 **Learning-guided mode** - AI provides hints before solutions to maximize learning
