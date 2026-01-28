@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@sperekrestova/interactive-leetcode-mcp.svg)](https://www.npmjs.com/package/@sperekrestova/interactive-leetcode-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/@sperekrestova/interactive-leetcode-mcp.svg)](https://www.npmjs.com/package/@sperekrestova/interactive-leetcode-mcp)
 [![GitHub stars](https://img.shields.io/github/stars/SPerekrestova/interactive-leetcode-mcp)](https://github.com/SPerekrestova/interactive-leetcode-mcp)
-[![MCP Registry](https://badge.mcpx.dev?status=on)](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.SPerekrestova%2Finteractive-leetcode-mcp/versions/2.0.1)
+[![MCP Registry](https://badge.mcpx.dev?status=on)](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.SPerekrestova%2Finteractive-leetcode-mcp/versions/latest)
 [![GitHub license](https://img.shields.io/github/license/SPerekrestova/interactive-leetcode-mcp)](https://github.com/SPerekrestova/interactive-leetcode-mcp/blob/main/LICENSE)
 
 > Current project is under active development and may not work perfectly
