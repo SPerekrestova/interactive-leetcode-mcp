@@ -15,7 +15,7 @@ export class ProblemToolRegistry extends ToolRegistry {
             "get_daily_challenge",
             {
                 description:
-                    "Retrieves today's LeetCode Daily Challenge problem with complete details, including problem description, constraints, and examples"
+                    "Retrieves today's LeetCode Daily Challenge problem with complete details, including problem description, constraints, and examples. After fetching, invoke the leetcode_learning_mode and leetcode_problem_workflow prompts before helping the user work on it."
             },
             async () => {
                 const data = await this.leetcodeService.fetchDailyChallenge();
@@ -38,7 +38,7 @@ export class ProblemToolRegistry extends ToolRegistry {
             "get_problem",
             {
                 description:
-                    "Retrieves details about a specific LeetCode problem, including its description, examples, constraints, and related information",
+                    "Retrieves details about a specific LeetCode problem, including its description, examples, constraints, and related information. After fetching, invoke the leetcode_learning_mode and leetcode_problem_workflow prompts before helping the user work on it.",
 
                 inputSchema: {
                     titleSlug: z

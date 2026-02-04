@@ -43,6 +43,9 @@ describe("Problem Tools Integration", () => {
                 expect(dailyChallengeTool?.description).toContain(
                     "Daily Challenge"
                 );
+                expect(dailyChallengeTool?.description).toContain(
+                    "leetcode_learning_mode"
+                );
             },
             INTEGRATION_TEST_TIMEOUT
         );
@@ -100,6 +103,9 @@ describe("Problem Tools Integration", () => {
                 const problemTool = tools.find((t) => t.name === "get_problem");
                 expect(problemTool).toBeDefined();
                 expect(problemTool?.description).toContain("problem");
+                expect(problemTool?.description).toContain(
+                    "leetcode_learning_mode"
+                );
             },
             INTEGRATION_TEST_TIMEOUT
         );
