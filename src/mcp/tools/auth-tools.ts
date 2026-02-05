@@ -160,6 +160,10 @@ export class AuthToolRegistry extends ToolRegistry {
                         createdAt: new Date().toISOString()
                     });
 
+                    // Update in-memory credentials so authenticated
+                    // tools work immediately without server restart
+                    this.leetcodeService.updateCredentials(csrftoken, session);
+
                     return {
                         content: [
                             {
