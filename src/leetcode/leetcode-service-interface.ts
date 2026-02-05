@@ -152,6 +152,15 @@ export interface LeetcodeServiceInterface {
     isAuthenticated(): boolean;
 
     /**
+     * Updates the in-memory credentials so authenticated API calls
+     * work immediately after save without a server restart.
+     *
+     * @param csrf - The CSRF token
+     * @param session - The session token
+     */
+    updateCredentials(csrf: string, session: string): void;
+
+    /**
      * Retrieves a list of solutions for a specific problem.
      *
      * @param questionSlug - The URL slug/identifier of the problem
