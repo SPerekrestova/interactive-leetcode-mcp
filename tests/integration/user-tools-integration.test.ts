@@ -256,7 +256,7 @@ describe("User Tools Integration", () => {
                 );
 
                 expect(tool).toBeDefined();
-                expect(tool?.description).toContain("progress");
+                expect(tool?.description).toContain("problem-solving");
             },
             INTEGRATION_TEST_TIMEOUT
         );
@@ -310,7 +310,9 @@ describe("User Tools Integration", () => {
 
                     assertions.hasToolResultStructure(result);
                     const data = JSON.parse(result.content[0].text as string);
-                    expect(data.error).toContain("Authentication required");
+                    expect(data.error).toContain(
+                        "Failed to fetch user progress questions"
+                    );
                 } finally {
                     await failingClient.cleanup();
                 }
@@ -381,7 +383,9 @@ describe("User Tools Integration", () => {
 
                     assertions.hasToolResultStructure(result);
                     const data = JSON.parse(result.content[0].text as string);
-                    expect(data.error).toContain("Authentication required");
+                    expect(data.error).toContain(
+                        "Failed to fetch user submissions"
+                    );
                 } finally {
                     await failingClient.cleanup();
                 }

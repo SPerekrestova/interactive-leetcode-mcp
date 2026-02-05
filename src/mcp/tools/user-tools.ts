@@ -8,10 +8,6 @@ import { ToolRegistry } from "./tool-registry.js";
  * This class manages tools for accessing user profiles, submissions, and progress data.
  */
 export class UserToolRegistry extends ToolRegistry {
-    protected get requiresAuthentication(): boolean {
-        return true;
-    }
-
     protected registerPublic(): void {
         // User profile tool
         this.server.registerTool(
@@ -154,12 +150,8 @@ export class UserToolRegistry extends ToolRegistry {
                 }
             }
         );
-    }
 
-    /**
-     * Registers tools specific to the Global LeetCode site that require authentication.
-     */
-    protected registerAuthenticated(): void {
+        // User status tool
         this.server.registerTool(
             "get_user_status",
             {
