@@ -1,3 +1,5 @@
+import { SubmissionResult } from "../types/submission.js";
+
 /**
  * Base interface for LeetCode API service implementations.
  * Defines the common methods that all LeetCode service implementations must provide.
@@ -179,4 +181,27 @@ export interface LeetcodeServiceInterface {
      * @returns Promise resolving to the solution detail data
      */
     fetchSolutionArticleDetail(identifier: string): Promise<any>;
+
+    /**
+     * Submits a solution to a problem and polls for the result.
+     *
+     * @param problemSlug - The URL slug/identifier of the problem
+     * @param code - The source code to submit
+     * @param language - The programming language of the source code
+     * @returns Promise resolving to the submission result
+     */
+    submitSolution(
+        problemSlug: string,
+        code: string,
+        language: string
+    ): Promise<SubmissionResult>;
+
+    /**
+     * Validates LeetCode credentials by making a test API call.
+     *
+     * @param csrf - The CSRF token
+     * @param session - The session token
+     * @returns Promise resolving to the username if valid, null otherwise
+     */
+    validateCredentials(csrf: string, session: string): Promise<string | null>;
 }

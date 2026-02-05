@@ -184,15 +184,15 @@ The Interactive LeetCode MCP includes AI agent guidance through MCP Prompts to c
 
 ### Features
 
-**Automatic Workspace Setup:**
-When you fetch a problem, the MCP guides Claude to:
+**Workspace Setup:**
+When learning mode is active, Claude will:
 
 - Create a workspace file named `{problem-slug}.{extension}`
 - Paste the code template into the file
 - Set up proper naming conventions (e.g., Java class names)
 
 **Learning-Guided Mode:**
-The MCP enforces pedagogical best practices:
+When active, Claude follows these guidelines:
 
 - Provides progressive hints (4 levels) before revealing solutions
 - Asks guiding questions about approach and complexity
@@ -211,14 +211,12 @@ Guides you through the complete cycle:
 
 ### How to Use Learning Mode
 
-The learning mode is always active. When working with LeetCode problems:
+To activate learning mode, tell Claude you want to practice with guidance — for example, "Let's practice in learning mode" or "I want to learn two-sum with hints." Once active:
 
 1. **Fetch a problem** to see the description and get workspace setup guidance
 2. **Ask for hints** rather than solutions ("Give me a hint")
 3. **Implement your solution** with progressive guidance
 4. **Request the solution** only when you want to compare with optimal approach ("Show me the solution")
-
-Claude will automatically follow learning-mode guidelines thanks to the MCP prompts.
 
 ## Troubleshooting
 
