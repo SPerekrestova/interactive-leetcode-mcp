@@ -347,4 +347,9 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
             !!this.credential.session
         );
     }
+
+    updateCredentials(csrf: string, session: string): void {
+        this.credential.csrf = csrf;
+        this.credential.session = session;
+    }
 }

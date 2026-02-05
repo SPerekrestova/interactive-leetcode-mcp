@@ -2,12 +2,36 @@
  * Auth Tools Integration Tests
  * Tests all authentication-related tools through MCP protocol
  */
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { registerAuthTools } from "../../src/mcp/tools/auth-tools.js";
 import { createMockLeetCodeService } from "../helpers/mock-leetcode.js";
 import type { TestClientPair } from "../helpers/test-client.js";
 import { createTestClient } from "../helpers/test-client.js";
 import { INTEGRATION_TEST_TIMEOUT, assertions } from "./setup.js";
+
+vi.mock("axios", () => ({
+    default: {
+        post: vi.fn().mockResolvedValue({
+            data: {
+                data: {
+                    userStatus: {
+                        username: "testuser",
+                        isSignedIn: true
+                    }
+                }
+            }
+        })
+    },
+    isAxiosError: vi.fn().mockReturnValue(false)
+}));
+
+vi.mock("../../src/utils/credentials.js", () => ({
+    credentialsStorage: {
+        save: vi.fn().mockResolvedValue(undefined),
+        load: vi.fn().mockResolvedValue(null),
+        exists: vi.fn().mockResolvedValue(false)
+    }
+}));
 
 describe("Auth Tools Integration", () => {
     let testClient: TestClientPair;
@@ -128,6 +152,32 @@ describe("Auth Tools Integration", () => {
                 expect(data.authenticated).toBeDefined();
                 expect(typeof data.authenticated).toBe("boolean");
                 expect(data.message).toBeDefined();
+            },
+            INTEGRATION_TEST_TIMEOUT
+        );
+    });
+
+    describe("save_leetcode_credentials updates in-memory credentials", () => {
+        it(
+            "should call updateCredentials on the service after successful save",
+            async () => {
+                const result: any = await testClient.client.callTool({
+                    name: "save_leetcode_credentials",
+                    arguments: {
+                        csrftoken: "test-csrf-token",
+                        session: "test-session-token"
+                    }
+                });
+
+                assertions.hasToolResultStructure(result);
+                const data = JSON.parse(result.content[0].text as string);
+
+                expect(data.status).toBe("success");
+                expect(data.username).toBe("testuser");
+                expect(mockService.updateCredentials).toHaveBeenCalledWith(
+                    "test-csrf-token",
+                    "test-session-token"
+                );
             },
             INTEGRATION_TEST_TIMEOUT
         );

@@ -151,12 +151,17 @@ export async function createTestClientWithServer(
         await import("../../src/mcp/prompts/learning-prompts.js");
     const { registerAuthPrompts } =
         await import("../../src/mcp/prompts/auth-prompts.js");
+    const { registerOnboardingTools } =
+        await import("../../src/mcp/tools/onboarding-tools.js");
 
     // Register learning prompts
     registerLearningPrompts(server, leetcodeService);
 
     // Register auth prompts
     registerAuthPrompts(server, leetcodeService);
+
+    // Register onboarding tools
+    registerOnboardingTools(server, leetcodeService);
 
     // Register all tools
     registerProblemTools(server, leetcodeService);

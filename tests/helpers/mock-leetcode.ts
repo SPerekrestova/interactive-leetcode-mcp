@@ -158,7 +158,8 @@ export function createMockLeetCodeService(): LeetcodeServiceInterface {
         }),
 
         // Authentication
-        isAuthenticated: vi.fn().mockReturnValue(false)
+        isAuthenticated: vi.fn().mockReturnValue(false),
+        updateCredentials: vi.fn()
     } as unknown as LeetcodeServiceInterface;
 }
 
@@ -195,6 +196,7 @@ export function createMockFailingService(): LeetcodeServiceInterface {
         fetchQuestionSolutionArticles: vi.fn().mockRejectedValue(error),
         fetchSolutionArticleDetail: vi.fn().mockRejectedValue(error),
         submitSolution: vi.fn().mockRejectedValue(error),
-        isAuthenticated: vi.fn().mockReturnValue(false)
+        isAuthenticated: vi.fn().mockReturnValue(false),
+        updateCredentials: vi.fn()
     } as unknown as LeetcodeServiceInterface;
 }

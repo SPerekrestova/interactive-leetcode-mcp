@@ -14,6 +14,7 @@ import { registerProblemResources } from "./mcp/resources/problem-resources.js";
 import { registerSolutionResources } from "./mcp/resources/solution-resources.js";
 import { registerAuthTools } from "./mcp/tools/auth-tools.js";
 import { registerContestTools } from "./mcp/tools/contest-tools.js";
+import { registerOnboardingTools } from "./mcp/tools/onboarding-tools.js";
 import { registerProblemTools } from "./mcp/tools/problem-tools.js";
 import { registerSolutionTools } from "./mcp/tools/solution-tools.js";
 import { registerSubmissionTools } from "./mcp/tools/submission-tools.js";
@@ -125,6 +126,8 @@ async function main() {
 
     // Register MCP prompts for authentication guidance
     registerAuthPrompts(server, leetcodeService);
+
+    registerOnboardingTools(server, leetcodeService);
 
     registerProblemTools(server, leetcodeService);
     registerUserTools(server, leetcodeService);

@@ -47,7 +47,8 @@ describe("AuthToolRegistry", () => {
         } as unknown as McpServer;
 
         mockLeetCodeService = {
-            isAuthenticated: vi.fn().mockReturnValue(false)
+            isAuthenticated: vi.fn().mockReturnValue(false),
+            updateCredentials: vi.fn()
         } as unknown as LeetcodeServiceInterface;
 
         registry = new AuthToolRegistry(mockServer, mockLeetCodeService);

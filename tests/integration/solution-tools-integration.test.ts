@@ -102,6 +102,7 @@ describe("Solution Tools Integration", () => {
                 );
                 expect(tool).toBeDefined();
                 expect(tool?.description).toContain("solution");
+                expect(tool?.description).toContain("hints");
             },
             INTEGRATION_TEST_TIMEOUT
         );

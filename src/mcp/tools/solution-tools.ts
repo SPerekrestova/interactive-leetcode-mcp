@@ -112,7 +112,7 @@ export class SolutionToolRegistry extends ToolRegistry {
             "get_problem_solution",
             {
                 description:
-                    "Retrieves the complete content and metadata of a specific solution, including the full article text, author information, and related navigation links",
+                    "Retrieves the complete content and metadata of a specific solution, including the full article text, author information, and related navigation links. This returns a FULL community solution — only call this after the user has exhausted progressive hints or has explicitly requested the solution after receiving earlier hints.",
 
                 inputSchema: {
                     topicId: z

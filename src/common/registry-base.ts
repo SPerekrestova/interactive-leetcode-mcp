@@ -19,33 +19,14 @@ export abstract class RegistryBase {
     ) {}
 
     /**
-     * Determines if the current LeetCode service has valid authentication credentials.
-     *
-     * @returns True if authenticated, false otherwise
-     */
-    get isAuthenticated(): boolean {
-        return this.leetcodeService.isAuthenticated();
-    }
-
-    /**
-     * Registers all applicable components based on authentication status.
+     * Registers all public components.
      */
     public register(): void {
         this.registerPublic();
-        if (this.isAuthenticated) {
-            this.registerAuthenticated();
-        }
     }
 
     /**
-     * Hook for registering components that don't require authentication.
-     * Override this in subclasses.
+     * Hook for registering components. Override in subclasses.
      */
     protected registerPublic(): void {}
-
-    /**
-     * Hook for registering components that require authentication.
-     * Override this in subclasses.
-     */
-    protected registerAuthenticated(): void {}
 }
