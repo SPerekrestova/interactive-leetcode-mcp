@@ -144,22 +144,17 @@ export function createMockLeetCodeService(): LeetcodeServiceInterface {
             createdAt: "1609459200"
         }),
 
-        // Submission methods
         submitSolution: vi.fn().mockResolvedValue({
-            status_code: 10,
-            status_msg: "Accepted",
-            run_success: true,
-            state: "SUCCESS",
+            accepted: true,
             runtime: "100 ms",
             memory: "42.5 MB",
-            code_output: "",
-            total_correct: 10,
-            total_testcases: 10
+            statusMessage: "Accepted"
         }),
 
         // Authentication
         isAuthenticated: vi.fn().mockReturnValue(false),
-        updateCredentials: vi.fn()
+        updateCredentials: vi.fn(),
+        validateCredentials: vi.fn().mockResolvedValue("testuser")
     } as unknown as LeetcodeServiceInterface;
 }
 

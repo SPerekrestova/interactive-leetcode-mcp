@@ -1,5 +1,4 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import axios from "axios";
 import { z } from "zod";
 import { LeetcodeServiceInterface } from "../../leetcode/leetcode-service-interface.js";
 import { openDefaultBrowser } from "../../utils/browser-launcher.js";
@@ -11,52 +10,6 @@ import { ToolRegistry } from "./tool-registry.js";
  * Uses AI-guided manual credential entry for maximum reliability and cross-platform compatibility.
  */
 export class AuthToolRegistry extends ToolRegistry {
-    /**
-     * Validates LeetCode credentials by making a test API call
-     * @param csrf - CSRF token
-     * @param session - Session token
-     * @returns username if valid, null if invalid
-     */
-    private async validateCredentials(
-        csrf: string,
-        session: string
-    ): Promise<string | null> {
-        try {
-            // Make a simple GraphQL query to validate credentials
-            const graphqlQuery = {
-                query: `
-                    query globalData {
-                        userStatus {
-                            username
-                            isSignedIn
-                        }
-                    }
-                `
-            };
-
-            const response = await axios.post(
-                "https://leetcode.com/graphql",
-                graphqlQuery,
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                        Cookie: `csrftoken=${csrf}; LEETCODE_SESSION=${session}`,
-                        "X-CSRFToken": csrf
-                    }
-                }
-            );
-
-            // Check if user is signed in and return username
-            const userStatus = response.data?.data?.userStatus;
-            if (userStatus?.isSignedIn === true && userStatus?.username) {
-                return userStatus.username;
-            }
-            return null;
-        } catch {
-            return null;
-        }
-    }
-
     /**
      * Attempts to open browser, returns success status
      */
@@ -132,10 +85,11 @@ export class AuthToolRegistry extends ToolRegistry {
             async ({ csrftoken, session }) => {
                 try {
                     // Validate credentials
-                    const username = await this.validateCredentials(
-                        csrftoken,
-                        session
-                    );
+                    const username =
+                        await this.leetcodeService.validateCredentials(
+                            csrftoken,
+                            session
+                        );
 
                     if (!username) {
                         return {
@@ -238,10 +192,11 @@ export class AuthToolRegistry extends ToolRegistry {
                     }
 
                     // Validate credentials are still valid
-                    const username = await this.validateCredentials(
-                        credentials.csrftoken,
-                        credentials.LEETCODE_SESSION
-                    );
+                    const username =
+                        await this.leetcodeService.validateCredentials(
+                            credentials.csrftoken,
+                            credentials.LEETCODE_SESSION
+                        );
 
                     if (!username) {
                         return {

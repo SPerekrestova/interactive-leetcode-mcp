@@ -1,13 +1,11 @@
 // tests/mcp/tools/auth-tools.test.ts
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import axios from "axios";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { LeetcodeServiceInterface } from "../../../src/leetcode/leetcode-service-interface.js";
 import { AuthToolRegistry } from "../../../src/mcp/tools/auth-tools.js";
 import { credentialsStorage } from "../../../src/utils/credentials.js";
 
 // Mock dependencies
-vi.mock("axios");
 vi.mock("../../../src/utils/browser-launcher.js", () => ({
     openDefaultBrowser: vi.fn()
 }));
@@ -48,7 +46,8 @@ describe("AuthToolRegistry", () => {
 
         mockLeetCodeService = {
             isAuthenticated: vi.fn().mockReturnValue(false),
-            updateCredentials: vi.fn()
+            updateCredentials: vi.fn(),
+            validateCredentials: vi.fn().mockResolvedValue("testuser")
         } as unknown as LeetcodeServiceInterface;
 
         registry = new AuthToolRegistry(mockServer, mockLeetCodeService);
@@ -125,49 +124,18 @@ describe("AuthToolRegistry", () => {
 
     describe("save_leetcode_credentials", () => {
         it("should validate credentials with LeetCode API", async () => {
-            vi.mocked(axios.post).mockResolvedValue({
-                data: {
-                    data: {
-                        userStatus: {
-                            isSignedIn: true,
-                            username: "testuser"
-                        }
-                    }
-                }
-            });
-
             const tool = registeredTools.get("save_leetcode_credentials");
             await tool!.handler({
                 csrftoken: "test-csrf",
                 session: "test-session"
             });
 
-            expect(axios.post).toHaveBeenCalledWith(
-                "https://leetcode.com/graphql",
-                expect.objectContaining({
-                    query: expect.stringContaining("userStatus")
-                }),
-                expect.objectContaining({
-                    headers: expect.objectContaining({
-                        Cookie: "csrftoken=test-csrf; LEETCODE_SESSION=test-session",
-                        "X-CSRFToken": "test-csrf"
-                    })
-                })
-            );
+            expect(
+                mockLeetCodeService.validateCredentials
+            ).toHaveBeenCalledWith("test-csrf", "test-session");
         });
 
         it("should save valid credentials", async () => {
-            vi.mocked(axios.post).mockResolvedValue({
-                data: {
-                    data: {
-                        userStatus: {
-                            isSignedIn: true,
-                            username: "testuser"
-                        }
-                    }
-                }
-            });
-
             const tool = registeredTools.get("save_leetcode_credentials");
             await tool!.handler({
                 csrftoken: "test-csrf",
@@ -182,17 +150,6 @@ describe("AuthToolRegistry", () => {
         });
 
         it("should return success with username for valid credentials", async () => {
-            vi.mocked(axios.post).mockResolvedValue({
-                data: {
-                    data: {
-                        userStatus: {
-                            isSignedIn: true,
-                            username: "testuser"
-                        }
-                    }
-                }
-            });
-
             const tool = registeredTools.get("save_leetcode_credentials");
             const result = await tool!.handler({
                 csrftoken: "test-csrf",
@@ -205,16 +162,9 @@ describe("AuthToolRegistry", () => {
         });
 
         it("should return error for invalid credentials", async () => {
-            vi.mocked(axios.post).mockResolvedValue({
-                data: {
-                    data: {
-                        userStatus: {
-                            isSignedIn: false,
-                            username: null
-                        }
-                    }
-                }
-            });
+            vi.mocked(
+                mockLeetCodeService.validateCredentials
+            ).mockResolvedValue(null);
 
             const tool = registeredTools.get("save_leetcode_credentials");
             const result = await tool!.handler({
@@ -228,7 +178,9 @@ describe("AuthToolRegistry", () => {
         });
 
         it("should handle API errors gracefully", async () => {
-            vi.mocked(axios.post).mockRejectedValue(new Error("Network error"));
+            vi.mocked(
+                mockLeetCodeService.validateCredentials
+            ).mockRejectedValue(new Error("Network error"));
 
             const tool = registeredTools.get("save_leetcode_credentials");
             const result = await tool!.handler({
@@ -259,21 +211,13 @@ describe("AuthToolRegistry", () => {
                 LEETCODE_SESSION: "test-session",
                 createdAt: new Date().toISOString()
             });
-            vi.mocked(axios.post).mockResolvedValue({
-                data: {
-                    data: {
-                        userStatus: {
-                            isSignedIn: true,
-                            username: "testuser"
-                        }
-                    }
-                }
-            });
 
             const tool = registeredTools.get("check_auth_status");
             await tool!.handler({});
 
-            expect(axios.post).toHaveBeenCalled();
+            expect(
+                mockLeetCodeService.validateCredentials
+            ).toHaveBeenCalledWith("test-csrf", "test-session");
         });
 
         it("should return authenticated with username for valid credentials", async () => {
@@ -282,16 +226,6 @@ describe("AuthToolRegistry", () => {
                 csrftoken: "test-csrf",
                 LEETCODE_SESSION: "test-session",
                 createdAt: new Date().toISOString()
-            });
-            vi.mocked(axios.post).mockResolvedValue({
-                data: {
-                    data: {
-                        userStatus: {
-                            isSignedIn: true,
-                            username: "testuser"
-                        }
-                    }
-                }
             });
 
             const tool = registeredTools.get("check_auth_status");
@@ -309,16 +243,9 @@ describe("AuthToolRegistry", () => {
                 LEETCODE_SESSION: "test-session",
                 createdAt: new Date().toISOString()
             });
-            vi.mocked(axios.post).mockResolvedValue({
-                data: {
-                    data: {
-                        userStatus: {
-                            isSignedIn: false,
-                            username: null
-                        }
-                    }
-                }
-            });
+            vi.mocked(
+                mockLeetCodeService.validateCredentials
+            ).mockResolvedValue(null);
 
             const tool = registeredTools.get("check_auth_status");
             const result = await tool!.handler({});
@@ -339,16 +266,6 @@ describe("AuthToolRegistry", () => {
                 LEETCODE_SESSION: "test-session",
                 createdAt: fiveDaysAgo
             });
-            vi.mocked(axios.post).mockResolvedValue({
-                data: {
-                    data: {
-                        userStatus: {
-                            isSignedIn: true,
-                            username: "testuser"
-                        }
-                    }
-                }
-            });
 
             const tool = registeredTools.get("check_auth_status");
             const result = await tool!.handler({});
@@ -367,16 +284,6 @@ describe("AuthToolRegistry", () => {
                 csrftoken: "test-csrf",
                 LEETCODE_SESSION: "test-session",
                 createdAt: sixDaysAgo
-            });
-            vi.mocked(axios.post).mockResolvedValue({
-                data: {
-                    data: {
-                        userStatus: {
-                            isSignedIn: true,
-                            username: "testuser"
-                        }
-                    }
-                }
             });
 
             const tool = registeredTools.get("check_auth_status");

@@ -1,14 +1,30 @@
+import axios, { AxiosError } from "axios";
 import { Credential, LeetCode } from "leetcode-query";
+import {
+    LeetCodeCheckResponse,
+    LeetCodeSubmitResponse,
+    SubmissionResult
+} from "../types/submission.js";
 import logger from "../utils/logger.js";
 import { SEARCH_PROBLEMS_QUERY } from "./graphql/search-problems.js";
 import { SOLUTION_ARTICLE_DETAIL_QUERY } from "./graphql/solution-article-detail.js";
 import { SOLUTION_ARTICLES_QUERY } from "./graphql/solution-articles.js";
 import { LeetcodeServiceInterface } from "./leetcode-service-interface.js";
 
+const LANGUAGE_MAP: Record<string, string> = {
+    java: "java",
+    python: "python3",
+    python3: "python3",
+    cpp: "cpp",
+    "c++": "cpp",
+    javascript: "javascript",
+    js: "javascript",
+    typescript: "typescript",
+    ts: "typescript"
+};
+
 /**
  * LeetCode Global API Service Implementation
- *
- * This class provides methods to interact with the LeetCode Global API
  */
 export class LeetCodeGlobalService implements LeetcodeServiceInterface {
     private readonly leetCodeApi: LeetCode;
@@ -340,12 +356,237 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
             });
     }
 
+    async submitSolution(
+        problemSlug: string,
+        code: string,
+        language: string
+    ): Promise<SubmissionResult> {
+        if (!this.isAuthenticated()) {
+            return {
+                accepted: false,
+                errorMessage: "Not authorized. Please run authorization first.",
+                statusMessage: "Authorization Required"
+            };
+        }
+
+        // Map language to LeetCode's expected format
+        const leetcodeLang = LANGUAGE_MAP[language.toLowerCase()];
+        if (!leetcodeLang) {
+            return {
+                accepted: false,
+                errorMessage: `Unsupported language: ${language}`,
+                statusMessage: "Invalid Language"
+            };
+        }
+
+        const baseUrl = "https://leetcode.com";
+
+        try {
+            // First, get the numeric question ID
+            const questionId = await this.getQuestionId(problemSlug, baseUrl);
+
+            // Submit solution
+            const submitUrl = `${baseUrl}/problems/${problemSlug}/submit/`;
+
+            const submitResponse = await axios.post<LeetCodeSubmitResponse>(
+                submitUrl,
+                {
+                    lang: leetcodeLang,
+                    question_id: questionId,
+                    typed_code: code
+                },
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Cookie: `csrftoken=${this.credential.csrf}; LEETCODE_SESSION=${this.credential.session}`,
+                        "X-CSRFToken": this.credential.csrf,
+                        Referer: `${baseUrl}/problems/${problemSlug}/`
+                    }
+                }
+            );
+
+            const submissionId = submitResponse.data.submission_id;
+
+            // Poll for results
+            const checkUrl = `${baseUrl}/submissions/detail/${submissionId}/check/`;
+            let attempts = 0;
+            const maxAttempts = 30;
+
+            while (attempts < maxAttempts) {
+                // Wait 1 second between polls
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+
+                const checkResponse = await axios.get<LeetCodeCheckResponse>(
+                    checkUrl,
+                    {
+                        headers: {
+                            Cookie: `csrftoken=${this.credential.csrf}; LEETCODE_SESSION=${this.credential.session}`
+                        }
+                    }
+                );
+
+                const result = checkResponse.data;
+
+                if (
+                    result.state !== "SUCCESS" &&
+                    result.state !== "PENDING" &&
+                    result.state !== "STARTED"
+                ) {
+                    return {
+                        accepted: false,
+                        statusMessage: "Error",
+                        errorMessage: `Unexpected submission state: \${result.state}`
+                    };
+                }
+
+                // Check if processing is complete
+                if (result.state === "SUCCESS") {
+                    const accepted = result.status_msg === "Accepted";
+
+                    if (accepted) {
+                        return {
+                            accepted: true,
+                            runtime: result.runtime,
+                            memory: result.memory,
+                            statusMessage: "Accepted"
+                        };
+                    } else {
+                        // Failed - extract test case info
+                        let failedTestCase = "";
+                        if (result.input) {
+                            failedTestCase = `Input: ${result.input}`;
+                            if (result.expected_answer && result.code_answer) {
+                                failedTestCase += `\\nExpected: ${JSON.stringify(result.expected_answer)}`;
+                                failedTestCase += `\\nGot: ${JSON.stringify(result.code_answer)}`;
+                            }
+                        }
+
+                        return {
+                            accepted: false,
+                            statusMessage: result.status_msg,
+                            failedTestCase,
+                            errorMessage: result.std_output
+                        };
+                    }
+                }
+
+                attempts++;
+            }
+
+            // Timeout
+            return {
+                accepted: false,
+                statusMessage: "Timeout",
+                errorMessage: "Submission check timed out after 30 seconds"
+            };
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const axiosError = error as AxiosError;
+
+                if (axiosError.response?.status === 401) {
+                    return {
+                        accepted: false,
+                        statusMessage: "Unauthorized",
+                        errorMessage: "Session expired. Please re-authorize."
+                    };
+                }
+
+                return {
+                    accepted: false,
+                    statusMessage: "Submission Failed",
+                    errorMessage: axiosError.message
+                };
+            }
+
+            return {
+                accepted: false,
+                statusMessage: "Error",
+                errorMessage:
+                    error instanceof Error ? error.message : String(error)
+            };
+        }
+    }
+
+    private async getQuestionId(
+        problemSlug: string,
+        baseUrl: string
+    ): Promise<string> {
+        const graphqlQuery = {
+            query: `
+                query questionTitle($titleSlug: String!) {
+                    question(titleSlug: $titleSlug) {
+                        questionId
+                        questionFrontendId
+                    }
+                }
+            `,
+            variables: { titleSlug: problemSlug }
+        };
+
+        const response = await axios.post(`${baseUrl}/graphql`, graphqlQuery, {
+            headers: {
+                "Content-Type": "application/json",
+                Cookie: `csrftoken=${this.credential.csrf}; LEETCODE_SESSION=${this.credential.session}`,
+                "X-CSRFToken": this.credential.csrf,
+                Referer: `${baseUrl}/problems/${problemSlug}/`
+            }
+        });
+
+        const question = response.data.data?.question;
+        if (!question) {
+            throw new Error(
+                `Problem slug "\${problemSlug}" not found or invalid.`
+            );
+        }
+        return question.questionId;
+    }
+
     isAuthenticated(): boolean {
         return (
             !!this.credential &&
             !!this.credential.csrf &&
             !!this.credential.session
         );
+    }
+
+    async validateCredentials(
+        csrf: string,
+        session: string
+    ): Promise<string | null> {
+        try {
+            // Make a simple GraphQL query to validate credentials
+            const graphqlQuery = {
+                query: `
+                    query globalData {
+                        userStatus {
+                            username
+                            isSignedIn
+                        }
+                    }
+                `
+            };
+
+            const response = await axios.post(
+                "https://leetcode.com/graphql",
+                graphqlQuery,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Cookie: `csrftoken=${csrf}; LEETCODE_SESSION=${session}`,
+                        "X-CSRFToken": csrf
+                    }
+                }
+            );
+
+            // Check if user is signed in and return username
+            const userStatus = response.data?.data?.userStatus;
+            if (userStatus?.isSignedIn === true && userStatus?.username) {
+                return userStatus.username;
+            }
+            return null;
+        } catch {
+            return null;
+        }
     }
 
     updateCredentials(csrf: string, session: string): void {
