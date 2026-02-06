@@ -80,7 +80,7 @@ Offer browser-specific guidance:
 - "LeetCode doesn't provide an official authentication API for third-party tools like this MCP server. Cookie extraction is the standard approach used by LeetCode CLI tools and integrations. Your credentials are stored securely and locally on your machine."
 
 **If user is concerned about security:**
-- "Your credentials are encrypted and stored locally in ~/.leetcode-mcp/credentials.json. They're never sent anywhere except directly to LeetCode's API to make requests on your behalf. This is the same method used by official LeetCode CLI tools."
+- "Your credentials are stored locally in ~/.leetcode-mcp/credentials.json with restricted file permissions (owner-only access). They're never sent anywhere except directly to LeetCode's API to make requests on your behalf. This is the same method used by official LeetCode CLI tools."
 
 **If user has trouble copying the entire value:**
 - "Make sure you're clicking on the value field (not the name), and that you can see the full text is selected before copying. The value is typically quite long (50+ characters)."
@@ -163,7 +163,7 @@ Once you're logged in, I'll walk you through getting two cookie values we need f
 - Credentials typically expire after 7-14 days
 - LeetCode allows only one active session per account at a time
 - The MCP server validates credentials by making a test API call to LeetCode's GraphQL endpoint
-- Credentials are stored encrypted in ~/.leetcode-mcp/credentials.json`;
+- Credentials are stored locally in ~/.leetcode-mcp/credentials.json with restricted file permissions`;
 
                 return {
                     messages: [

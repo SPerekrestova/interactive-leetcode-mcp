@@ -27,7 +27,7 @@ export class SolutionToolRegistry extends ToolRegistry {
                         .optional()
                         .default(10)
                         .describe(
-                            "Maximum number of solutions to return per request. Used for pagination and controlling response size. Default is 20 if not specified. Must be a positive integer."
+                            "Maximum number of solutions to return per request. Used for pagination and controlling response size. Default is 10 if not specified. Must be a positive integer."
                         ),
                     skip: z
                         .number()

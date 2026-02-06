@@ -2,38 +2,12 @@
  * Common setup for integration tests
  * Provides utilities and configurations used across all integration tests
  */
-import { afterAll, beforeAll } from "vitest";
 
 /**
  * Global test timeout for integration tests (5 seconds)
  * Integration tests may take longer than unit tests due to MCP protocol overhead
  */
 export const INTEGRATION_TEST_TIMEOUT = 5000;
-
-/**
- * Setup function to run before all integration tests
- * Can be used for global test initialization
- */
-export function setupIntegrationTests() {
-    beforeAll(() => {
-        // Set longer timeout for integration tests
-        // Tests that interact through MCP protocol need more time
-    });
-
-    afterAll(() => {
-        // Global cleanup if needed
-    });
-}
-
-/**
- * Helper to create a delay for testing async operations
- * Useful for simulating API delays or testing timeouts
- *
- * @param ms Milliseconds to delay
- */
-export function delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 /**
  * Common test assertions for MCP protocol responses

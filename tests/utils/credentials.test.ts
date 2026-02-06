@@ -9,11 +9,8 @@ describe("FileCredentialsStorage", () => {
     const testDir = join(homedir(), ".leetcode-mcp-test");
     let storage: FileCredentialsStorage;
 
-    // Mock the credentials directory for testing
     beforeEach(async () => {
-        // Create a test instance that uses a different directory
-        storage = new FileCredentialsStorage();
-        // Override the paths for testing (we'll use the actual implementation)
+        storage = new FileCredentialsStorage(testDir);
         try {
             await fs.mkdir(testDir, { recursive: true });
         } catch {
@@ -33,9 +30,7 @@ describe("FileCredentialsStorage", () => {
     describe("exists", () => {
         it("should return false when credentials file does not exist", async () => {
             const exists = await storage.exists();
-            // Since we're using the real implementation, this will check the actual path
-            // For now, we'll just verify the method works
-            expect(typeof exists).toBe("boolean");
+            expect(exists).toBe(false);
         });
     });
 
@@ -81,7 +76,7 @@ describe("FileCredentialsStorage", () => {
         });
 
         it("should not error when clearing non-existent credentials", async () => {
-            expect(storage.clear()).resolves.not.toThrow();
+            await expect(storage.clear()).resolves.not.toThrow();
         });
     });
 
@@ -95,7 +90,7 @@ describe("FileCredentialsStorage", () => {
 
             // This test verifies that errors are properly thrown
             // The actual save should work, so we just verify the method exists
-            expect(storage.save(credentials)).resolves.not.toThrow();
+            await expect(storage.save(credentials)).resolves.not.toThrow();
         });
     });
 });

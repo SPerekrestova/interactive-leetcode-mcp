@@ -1,9 +1,7 @@
 export interface LeetCodeCredentials {
     csrftoken: string;
     LEETCODE_SESSION: string;
-    browser?: string;
     createdAt?: string;
-    expiresAt?: string;
 }
 
 export interface CredentialsStorage {

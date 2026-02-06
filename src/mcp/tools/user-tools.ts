@@ -24,19 +24,33 @@ export class UserToolRegistry extends ToolRegistry {
                 }
             },
             async ({ username }) => {
-                const data =
-                    await this.leetcodeService.fetchUserProfile(username);
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: JSON.stringify({
-                                username: username,
-                                profile: data
-                            })
-                        }
-                    ]
-                };
+                try {
+                    const data =
+                        await this.leetcodeService.fetchUserProfile(username);
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: JSON.stringify({
+                                    username: username,
+                                    profile: data
+                                })
+                            }
+                        ]
+                    };
+                } catch (error: any) {
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: JSON.stringify({
+                                    error: "Failed to fetch user profile",
+                                    message: error.message
+                                })
+                            }
+                        ]
+                    };
+                }
             }
         );
 

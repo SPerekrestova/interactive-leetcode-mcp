@@ -61,8 +61,8 @@ describe("LeetCode Solution Services", () => {
                     });
 
                 if (
-                    !solutionsResult.edges ||
-                    solutionsResult.edges.length === 0
+                    !solutionsResult.articles ||
+                    solutionsResult.articles.length === 0
                 ) {
                     logger.info(
                         "No solutions found for two-sum, skipping test"
@@ -70,7 +70,7 @@ describe("LeetCode Solution Services", () => {
                     return;
                 }
 
-                const topicId = solutionsResult.edges[0].node.topic.id;
+                const topicId = solutionsResult.articles[0].topicId;
                 logger.info(`Using topicId: ${topicId} for detail fetch`);
 
                 const result =

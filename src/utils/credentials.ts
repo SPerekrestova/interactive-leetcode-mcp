@@ -6,13 +6,20 @@ import {
     LeetCodeCredentials
 } from "../types/credentials.js";
 
-const CREDENTIALS_DIR = join(homedir(), ".leetcode-mcp");
-const CREDENTIALS_FILE = join(CREDENTIALS_DIR, "credentials.json");
+const DEFAULT_CREDENTIALS_DIR = join(homedir(), ".leetcode-mcp");
 
 export class FileCredentialsStorage implements CredentialsStorage {
+    private readonly credentialsDir: string;
+    private readonly credentialsFile: string;
+
+    constructor(credentialsDir?: string) {
+        this.credentialsDir = credentialsDir ?? DEFAULT_CREDENTIALS_DIR;
+        this.credentialsFile = join(this.credentialsDir, "credentials.json");
+    }
+
     async exists(): Promise<boolean> {
         try {
-            await fs.access(CREDENTIALS_FILE);
+            await fs.access(this.credentialsFile);
             return true;
         } catch {
             return false;
@@ -21,7 +28,7 @@ export class FileCredentialsStorage implements CredentialsStorage {
 
     async load(): Promise<LeetCodeCredentials | null> {
         try {
-            const data = await fs.readFile(CREDENTIALS_FILE, "utf-8");
+            const data = await fs.readFile(this.credentialsFile, "utf-8");
             return JSON.parse(data) as LeetCodeCredentials;
         } catch {
             return null;
@@ -30,9 +37,9 @@ export class FileCredentialsStorage implements CredentialsStorage {
 
     async save(credentials: LeetCodeCredentials): Promise<void> {
         try {
-            await fs.mkdir(CREDENTIALS_DIR, { recursive: true });
+            await fs.mkdir(this.credentialsDir, { recursive: true });
             await fs.writeFile(
-                CREDENTIALS_FILE,
+                this.credentialsFile,
                 JSON.stringify(credentials, null, 2),
                 { encoding: "utf-8", mode: 0o600 }
             );
@@ -43,7 +50,7 @@ export class FileCredentialsStorage implements CredentialsStorage {
 
     async clear(): Promise<void> {
         try {
-            await fs.unlink(CREDENTIALS_FILE);
+            await fs.unlink(this.credentialsFile);
         } catch {
             // File doesn't exist, that's fine
         }

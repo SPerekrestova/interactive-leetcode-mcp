@@ -194,12 +194,17 @@ Keep the user engaged and learning at each step. Adjust the level of guidance ba
             "c#": ".cs",
             csharp: ".cs",
             go: ".go",
+            golang: ".go",
             rust: ".rs",
             ruby: ".rb",
             swift: ".swift",
             kotlin: ".kt",
             scala: ".scala",
-            php: ".php"
+            php: ".php",
+            dart: ".dart",
+            erlang: ".erl",
+            elixir: ".ex",
+            racket: ".rkt"
         };
 
         return extensionMap[language.toLowerCase()] || ".txt";
