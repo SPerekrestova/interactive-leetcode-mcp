@@ -52,26 +52,6 @@ export const TWO_SUM_PROBLEM = {
 };
 
 /**
- * Three Sum problem
- */
-export const THREE_SUM_PROBLEM = {
-    questionId: "15",
-    title: "3Sum",
-    titleSlug: "3sum",
-    difficulty: "Medium",
-    content: `<p>Given an integer array nums, return all the triplets <code>[nums[i], nums[j], nums[k]]</code> such that <code>i != j</code>, <code>i != k</code>, and <code>j != k</code>, and <code>nums[i] + nums[j] + nums[k] == 0</code>.</p>`,
-    topicTags: [
-        { name: "Array", slug: "array" },
-        { name: "Two Pointers", slug: "two-pointers" },
-        { name: "Sorting", slug: "sorting" }
-    ],
-    codeSnippets: [],
-    hints: [],
-    sampleTestCase: "[-1,0,1,2,-1,-4]",
-    exampleTestcases: "[-1,0,1,2,-1,-4]\n[0,1,1]\n[0,0,0]"
-};
-
-/**
  * Sample search results
  */
 export const SEARCH_RESULTS = {
@@ -122,85 +102,4 @@ export const DAILY_CHALLENGE = {
             { name: "Hash Table", slug: "hash-table" }
         ]
     }
-};
-
-/**
- * Sample solution article
- */
-export const SOLUTION_ARTICLE = {
-    topicId: 12345,
-    title: "Two Sum - Hash Table Solution",
-    slug: "two-sum-hash-table-solution",
-    content: `# Approach: Hash Table
-
-## Intuition
-While we iterate through the array, we can build a hash table that maps each number to its index. For each number, we check if the complement (target - current number) exists in the hash table.
-
-## Algorithm
-1. Create an empty hash table
-2. For each element nums[i]:
-   - Calculate complement = target - nums[i]
-   - If complement exists in hash table, return [hashTable[complement], i]
-   - Otherwise, add nums[i] to hash table with value i
-
-## Complexity
-- Time complexity: O(n)
-- Space complexity: O(n)`,
-    authorUsername: "leetcode",
-    voteCount: 2543,
-    createdAt: "1609459200"
-};
-
-/**
- * Sample submission result - Accepted
- */
-export const ACCEPTED_SUBMISSION = {
-    status_code: 10,
-    status_msg: "Accepted",
-    run_success: true,
-    state: "SUCCESS",
-    runtime: "72 ms",
-    runtime_percentile: 85.3,
-    memory: "42.5 MB",
-    memory_percentile: 75.2,
-    code_output: "",
-    total_correct: 58,
-    total_testcases: 58,
-    compare_result:
-        "11111111111111111111111111111111111111111111111111111111111"
-};
-
-/**
- * Sample submission result - Wrong Answer
- */
-export const WRONG_ANSWER_SUBMISSION = {
-    status_code: 11,
-    status_msg: "Wrong Answer",
-    run_success: true,
-    state: "SUCCESS",
-    runtime: "0 ms",
-    memory: "0 MB",
-    code_output: "",
-    total_correct: 52,
-    total_testcases: 58,
-    input_formatted: "[2,7,11,15]\n9",
-    input: "[2,7,11,15]\n9",
-    expected_output: "[0,1]",
-    code_answer: ["[0,2]"],
-    std_output_list: [""]
-};
-
-/**
- * Sample submission result - Runtime Error
- */
-export const RUNTIME_ERROR_SUBMISSION = {
-    status_code: 15,
-    status_msg: "Runtime Error",
-    run_success: false,
-    state: "SUCCESS",
-    runtime_error: "Line 3: IndexError: list index out of range",
-    full_runtime_error: "Traceback (most recent call last):\n  File ...",
-    code_output: "",
-    total_correct: 0,
-    total_testcases: 58
 };

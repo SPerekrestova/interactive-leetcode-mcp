@@ -1,9 +1,3 @@
-export interface SubmissionRequest {
-    problemSlug: string;
-    code: string;
-    language: string;
-}
-
 export interface SubmissionResult {
     accepted: boolean;
     runtime?: string;

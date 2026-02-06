@@ -7,7 +7,7 @@ import {
 } from "../types/credentials.js";
 
 const DEFAULT_CREDENTIALS_DIR = join(homedir(), ".leetcode-mcp");
-join(DEFAULT_CREDENTIALS_DIR, "credentials.json");
+
 export class FileCredentialsStorage implements CredentialsStorage {
     private readonly credentialsDir: string;
     private readonly credentialsFile: string;
