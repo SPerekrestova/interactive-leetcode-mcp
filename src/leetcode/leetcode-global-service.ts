@@ -94,12 +94,6 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
         return { submissions };
     }
 
-    /**
-     * 获取用户最近的提交记录
-     * @param username
-     * @param limit
-     * @returns
-     */
     async fetchUserRecentSubmissions(
         username: string,
         limit?: number
@@ -107,12 +101,6 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
         return await this.leetCodeApi.recent_submissions(username, limit);
     }
 
-    /**
-     * 获取用户最近 AC 的提交记录
-     * @param username
-     * @param limit
-     * @returns
-     */
     async fetchUserRecentACSubmissions(
         username: string,
         limit?: number
