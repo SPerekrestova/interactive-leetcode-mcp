@@ -15,12 +15,27 @@ const LANGUAGE_MAP: Record<string, string> = {
     java: "java",
     python: "python3",
     python3: "python3",
+    c: "c",
     cpp: "cpp",
     "c++": "cpp",
+    csharp: "csharp",
+    "c#": "csharp",
     javascript: "javascript",
     js: "javascript",
     typescript: "typescript",
-    ts: "typescript"
+    ts: "typescript",
+    php: "php",
+    swift: "swift",
+    kotlin: "kotlin",
+    dart: "dart",
+    golang: "golang",
+    go: "golang",
+    ruby: "ruby",
+    scala: "scala",
+    rust: "rust",
+    racket: "racket",
+    erlang: "erlang",
+    elixir: "elixir"
 };
 
 /**
@@ -149,11 +164,17 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
         attended: boolean = true
     ): Promise<any> {
         const contestInfo = await this.leetCodeApi.user_contest_info(username);
-        if (contestInfo.userContestRankingHistory && attended) {
-            contestInfo.userContestRankingHistory =
-                contestInfo.userContestRankingHistory.filter((contest: any) => {
-                    return contest && contest.attended;
-                });
+        if (contestInfo.userContestRankingHistory) {
+            if (attended) {
+                contestInfo.userContestRankingHistory =
+                    contestInfo.userContestRankingHistory.filter(
+                        (contest: any) => {
+                            return contest && contest.attended;
+                        }
+                    );
+            }
+        } else {
+            contestInfo.userContestRankingHistory = [];
         }
         return contestInfo;
     }
@@ -175,10 +196,7 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
         const filteredTopicTags =
             problem.topicTags?.map((tag: any) => tag.slug) || [];
 
-        const filteredCodeSnippets =
-            problem.codeSnippets?.filter((snippet: any) =>
-                ["cpp", "python3", "java"].includes(snippet.langSlug)
-            ) || [];
+        const filteredCodeSnippets = problem.codeSnippets || [];
 
         let parsedSimilarQuestions: any[] = [];
         if (problem.similarQuestions) {
@@ -435,7 +453,7 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
                     return {
                         accepted: false,
                         statusMessage: "Error",
-                        errorMessage: `Unexpected submission state: \${result.state}`
+                        errorMessage: `Unexpected submission state: ${result.state}`
                     };
                 }
 
@@ -448,6 +466,10 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
                             accepted: true,
                             runtime: result.runtime,
                             memory: result.memory,
+                            runtimePercentile: result.runtime_percentile,
+                            memoryPercentile: result.memory_percentile,
+                            totalCorrect: result.total_correct,
+                            totalTestcases: result.total_testcases,
                             statusMessage: "Accepted"
                         };
                     } else {
@@ -456,16 +478,27 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
                         if (result.input) {
                             failedTestCase = `Input: ${result.input}`;
                             if (result.expected_answer && result.code_answer) {
-                                failedTestCase += `\\nExpected: ${JSON.stringify(result.expected_answer)}`;
-                                failedTestCase += `\\nGot: ${JSON.stringify(result.code_answer)}`;
+                                failedTestCase += `\nExpected: ${JSON.stringify(result.expected_answer)}`;
+                                failedTestCase += `\nGot: ${JSON.stringify(result.code_answer)}`;
                             }
                         }
+
+                        // Use the most specific error message available
+                        const errorMessage =
+                            result.full_compile_error ||
+                            result.compile_error ||
+                            result.full_runtime_error ||
+                            result.runtime_error ||
+                            result.std_output ||
+                            undefined;
 
                         return {
                             accepted: false,
                             statusMessage: result.status_msg,
                             failedTestCase,
-                            errorMessage: result.std_output
+                            errorMessage,
+                            totalCorrect: result.total_correct,
+                            totalTestcases: result.total_testcases
                         };
                     }
                 }
@@ -535,7 +568,7 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
         const question = response.data.data?.question;
         if (!question) {
             throw new Error(
-                `Problem slug "\${problemSlug}" not found or invalid.`
+                `Problem slug "${problemSlug}" not found or invalid.`
             );
         }
         return question.questionId;

@@ -62,7 +62,7 @@ describe("Submission Integration", () => {
         it("should handle GraphQL errors", async () => {
             mockedAxios.post.mockRejectedValueOnce(new Error("Network error"));
 
-            expect(
+            await expect(
                 axios.post("https://leetcode.com/graphql", {})
             ).rejects.toThrow("Network error");
         });
@@ -187,7 +187,7 @@ describe("Submission Integration", () => {
 
             mockedAxios.post.mockRejectedValueOnce(error);
 
-            expect(
+            await expect(
                 axios.post("https://leetcode.com/problems/two-sum/submit/", {})
             ).rejects.toMatchObject({
                 response: {
@@ -201,7 +201,7 @@ describe("Submission Integration", () => {
                 new Error("Network timeout")
             );
 
-            expect(
+            await expect(
                 axios.post("https://leetcode.com/problems/two-sum/submit/", {})
             ).rejects.toThrow("Network timeout");
         });

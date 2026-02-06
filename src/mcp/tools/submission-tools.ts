@@ -24,32 +24,59 @@ export class SubmissionToolRegistry extends ToolRegistry {
                             "java",
                             "python",
                             "python3",
+                            "c",
                             "cpp",
                             "c++",
+                            "csharp",
+                            "c#",
                             "javascript",
                             "js",
                             "typescript",
-                            "ts"
+                            "ts",
+                            "php",
+                            "swift",
+                            "kotlin",
+                            "dart",
+                            "golang",
+                            "go",
+                            "ruby",
+                            "scala",
+                            "rust",
+                            "racket",
+                            "erlang",
+                            "elixir"
                         ])
-                        .describe(
-                            "Programming language (java, python, cpp, javascript, typescript)"
-                        )
+                        .describe("Programming language for the solution")
                 }
             },
             async ({ problemSlug, code, language }) => {
-                const result = await this.leetcodeService.submitSolution(
-                    problemSlug,
-                    code,
-                    language
-                );
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: JSON.stringify(result, null, 2)
-                        }
-                    ]
-                };
+                try {
+                    const result = await this.leetcodeService.submitSolution(
+                        problemSlug,
+                        code,
+                        language
+                    );
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: JSON.stringify(result, null, 2)
+                            }
+                        ]
+                    };
+                } catch (error: any) {
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: JSON.stringify({
+                                    error: "Failed to submit solution",
+                                    message: error.message
+                                })
+                            }
+                        ]
+                    };
+                }
             }
         );
     }

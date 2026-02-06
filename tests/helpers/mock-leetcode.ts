@@ -192,6 +192,7 @@ export function createMockFailingService(): LeetcodeServiceInterface {
         fetchSolutionArticleDetail: vi.fn().mockRejectedValue(error),
         submitSolution: vi.fn().mockRejectedValue(error),
         isAuthenticated: vi.fn().mockReturnValue(false),
-        updateCredentials: vi.fn()
+        updateCredentials: vi.fn(),
+        validateCredentials: vi.fn().mockRejectedValue(error)
     } as unknown as LeetcodeServiceInterface;
 }

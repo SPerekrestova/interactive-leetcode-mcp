@@ -25,6 +25,10 @@ vi.mock("axios", () => ({
     isAxiosError: vi.fn().mockReturnValue(false)
 }));
 
+vi.mock("../../src/utils/browser-launcher.js", () => ({
+    openDefaultBrowser: vi.fn()
+}));
+
 vi.mock("../../src/utils/credentials.js", () => ({
     credentialsStorage: {
         save: vi.fn().mockResolvedValue(undefined),

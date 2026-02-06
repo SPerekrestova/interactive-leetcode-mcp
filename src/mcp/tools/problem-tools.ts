@@ -18,18 +18,35 @@ export class ProblemToolRegistry extends ToolRegistry {
                     "Retrieves today's LeetCode Daily Challenge problem with complete details, including problem description, constraints, and examples. After fetching, invoke the leetcode_learning_mode and leetcode_problem_workflow prompts before helping the user work on it."
             },
             async () => {
-                const data = await this.leetcodeService.fetchDailyChallenge();
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: JSON.stringify({
-                                date: new Date().toISOString().split("T")[0],
-                                problem: data
-                            })
-                        }
-                    ]
-                };
+                try {
+                    const data =
+                        await this.leetcodeService.fetchDailyChallenge();
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: JSON.stringify({
+                                    date:
+                                        data?.date ??
+                                        new Date().toISOString().split("T")[0],
+                                    problem: data
+                                })
+                            }
+                        ]
+                    };
+                } catch (error: any) {
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: JSON.stringify({
+                                    error: "Failed to fetch daily challenge",
+                                    message: error.message
+                                })
+                            }
+                        ]
+                    };
+                }
             }
         );
 
@@ -49,21 +66,35 @@ export class ProblemToolRegistry extends ToolRegistry {
                 }
             },
             async ({ titleSlug }) => {
-                const data =
-                    await this.leetcodeService.fetchProblemSimplified(
-                        titleSlug
-                    );
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: JSON.stringify({
-                                titleSlug,
-                                problem: data
-                            })
-                        }
-                    ]
-                };
+                try {
+                    const data =
+                        await this.leetcodeService.fetchProblemSimplified(
+                            titleSlug
+                        );
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: JSON.stringify({
+                                    titleSlug,
+                                    problem: data
+                                })
+                            }
+                        ]
+                    };
+                } catch (error: any) {
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: JSON.stringify({
+                                    error: "Failed to fetch problem details",
+                                    message: error.message
+                                })
+                            }
+                        ]
+                    };
+                }
             }
         );
 
@@ -120,26 +151,44 @@ export class ProblemToolRegistry extends ToolRegistry {
                 offset,
                 searchKeywords
             }) => {
-                const data = await this.leetcodeService.searchProblems(
-                    category,
-                    tags,
-                    difficulty,
-                    limit,
-                    offset,
-                    searchKeywords
-                );
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: JSON.stringify({
-                                filters: { tags, difficulty, searchKeywords },
-                                pagination: { limit, offset },
-                                problems: data
-                            })
-                        }
-                    ]
-                };
+                try {
+                    const data = await this.leetcodeService.searchProblems(
+                        category,
+                        tags,
+                        difficulty,
+                        limit,
+                        offset,
+                        searchKeywords
+                    );
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: JSON.stringify({
+                                    filters: {
+                                        tags,
+                                        difficulty,
+                                        searchKeywords
+                                    },
+                                    pagination: { limit, offset },
+                                    problems: data
+                                })
+                            }
+                        ]
+                    };
+                } catch (error: any) {
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: JSON.stringify({
+                                    error: "Failed to search problems",
+                                    message: error.message
+                                })
+                            }
+                        ]
+                    };
+                }
             }
         );
     }
