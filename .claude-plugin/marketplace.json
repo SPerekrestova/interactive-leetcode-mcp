@@ -11,7 +11,7 @@
             "name": "interactive-leetcode-mcp",
             "source": ".",
             "description": "Interactive LeetCode practice with learning-guided hints, solution submission, and AI-driven authentication via MCP server",
-            "version": "3.1.0",
+            "version": "3.2.0",
             "homepage": "https://github.com/SPerekrestova/interactive-leetcode-mcp",
             "keywords": ["leetcode", "mcp", "practice", "coding-interview"],
             "category": "learning"

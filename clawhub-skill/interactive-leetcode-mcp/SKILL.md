@@ -33,7 +33,7 @@ After the user confirms, add to the client's MCP configuration (the exact file v
   "mcpServers": {
     "leetcode": {
       "command": "npx",
-      "args": ["-y", "@sperekrestova/interactive-leetcode-mcp@3.1.0"]
+      "args": ["-y", "@sperekrestova/interactive-leetcode-mcp@3.2.0"]
     }
   }
 }
@@ -42,7 +42,7 @@ After the user confirms, add to the client's MCP configuration (the exact file v
 For Claude Code specifically, you can also run:
 
 ```bash
-claude mcp add --transport stdio leetcode -- npx -y @sperekrestova/interactive-leetcode-mcp@3.1.0
+claude mcp add --transport stdio leetcode -- npx -y @sperekrestova/interactive-leetcode-mcp@3.2.0
 ```
 
 **Pin a specific version** (shown above) rather than using `@latest` to avoid executing untested code. Users can check for newer versions at the [npm page](https://www.npmjs.com/package/@sperekrestova/interactive-leetcode-mcp) or [GitHub releases](https://github.com/SPerekrestova/interactive-leetcode-mcp/releases) and update the pinned version after reviewing the changelog.
