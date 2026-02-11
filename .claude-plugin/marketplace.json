@@ -9,7 +9,10 @@
     "plugins": [
         {
             "name": "interactive-leetcode-mcp",
-            "source": ".",
+            "source": {
+                "source": "github",
+                "repo": "SPerekrestova/interactive-leetcode-mcp"
+            },
             "description": "Interactive LeetCode practice with learning-guided hints, solution submission, and AI-driven authentication via MCP server",
             "version": "3.2.0",
             "homepage": "https://github.com/SPerekrestova/interactive-leetcode-mcp",
