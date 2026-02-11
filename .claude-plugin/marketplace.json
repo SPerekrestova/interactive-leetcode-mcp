@@ -1,0 +1,20 @@
+{
+    "name": "interactive-leetcode-mcp",
+    "owner": {
+        "name": "SPerekrestova"
+    },
+    "metadata": {
+        "description": "Interactive LeetCode MCP server plugin for Claude Code"
+    },
+    "plugins": [
+        {
+            "name": "interactive-leetcode-mcp",
+            "source": ".",
+            "description": "Interactive LeetCode practice with learning-guided hints, solution submission, and AI-driven authentication via MCP server",
+            "version": "3.1.0",
+            "homepage": "https://github.com/SPerekrestova/interactive-leetcode-mcp",
+            "keywords": ["leetcode", "mcp", "practice", "coding-interview"],
+            "category": "learning"
+        }
+    ]
+}

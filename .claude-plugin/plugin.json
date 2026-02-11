@@ -1,0 +1,12 @@
+{
+    "name": "interactive-leetcode-mcp",
+    "description": "Interactive LeetCode practice with learning-guided hints, solution submission, and AI-driven authentication via MCP server",
+    "version": "3.1.0",
+    "author": {
+        "name": "SPerekrestova"
+    },
+    "homepage": "https://github.com/SPerekrestova/interactive-leetcode-mcp",
+    "repository": "https://github.com/SPerekrestova/interactive-leetcode-mcp",
+    "license": "MIT",
+    "keywords": ["leetcode", "mcp", "practice", "coding-interview", "learning"]
+}

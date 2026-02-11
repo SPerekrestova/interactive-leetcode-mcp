@@ -31,7 +31,7 @@
         "dev": "tsc-watch --onSuccess \"node build/index.js\"",
         "format": "prettier --write .",
         "prepare": "husky",
-        "sync-version": "node -e \"const pkg=require('./package.json');const server=require('./server.json');server.version=pkg.version;server.packages[0].version=pkg.version;require('fs').writeFileSync('server.json',JSON.stringify(server,null,4)+'\\n')\"",
+        "sync-version": "node scripts/sync-version.cjs",
         "prepublishOnly": "npm run sync-version && npm run build"
     },
     "bin": {
