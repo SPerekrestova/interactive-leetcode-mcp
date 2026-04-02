@@ -64,11 +64,11 @@
         ]
     },
     "dependencies": {
-        "@modelcontextprotocol/sdk": "^1.25.2",
-        "axios": "^1.13.2",
+        "@modelcontextprotocol/sdk": "^1.29.0",
+        "axios": "^1.14.0",
         "leetcode-query": "^2.0.0",
         "minimist": "^1.2.8",
-        "pino": "^9.6.0",
+        "pino": "^10.3.1",
         "zod": "^3.24.2"
     },
     "devDependencies": {
