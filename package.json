@@ -65,7 +65,7 @@
     },
     "dependencies": {
         "@modelcontextprotocol/sdk": "^1.29.0",
-        "axios": "^1.14.0",
+        "axios": "^1.15.0",
         "leetcode-query": "^2.0.0",
         "minimist": "^1.2.8",
         "pino": "^10.3.1",
