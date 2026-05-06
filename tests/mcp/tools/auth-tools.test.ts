@@ -234,6 +234,12 @@ describe("AuthToolRegistry", () => {
             const response = JSON.parse(result.content[0].text);
             expect(response.authenticated).toBe(true);
             expect(response.username).toBe("testuser");
+            // Validated credentials must be pushed into the running service
+            // so the next authenticated tool call works without a restart.
+            expect(mockLeetCodeService.updateCredentials).toHaveBeenCalledWith(
+                "test-csrf",
+                "test-session"
+            );
         });
 
         it("should return expired status for invalid credentials", async () => {

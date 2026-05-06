@@ -70,15 +70,22 @@ describe("LeetCode Solution Services", () => {
                     return;
                 }
 
-                const topicId = solutionsResult.articles[0].topicId;
+                const topicId = solutionsResult.articles[0]?.topicId;
+                if (topicId === undefined) {
+                    logger.info(
+                        "First article had no topicId, skipping detail fetch test"
+                    );
+                    return;
+                }
                 logger.info(`Using topicId: ${topicId} for detail fetch`);
 
-                const result =
-                    await service.fetchSolutionArticleDetail(topicId);
+                const result = await service.fetchSolutionArticleDetail(
+                    String(topicId)
+                );
 
                 expect(result).toBeDefined();
-                expect(result.title).toBeDefined();
-                expect(result.content).toBeDefined();
+                expect(result?.title).toBeDefined();
+                expect(result?.content).toBeDefined();
             }, 30000);
 
             it("should handle errors properly for invalid topicIds", async () => {
