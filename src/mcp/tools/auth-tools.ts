@@ -214,6 +214,14 @@ export class AuthToolRegistry extends ToolRegistry {
                         };
                     }
 
+                    // Push validated creds into the running service so the
+                    // very next authenticated tool call works without a
+                    // server restart.
+                    this.leetcodeService.updateCredentials(
+                        credentials.csrftoken,
+                        credentials.LEETCODE_SESSION
+                    );
+
                     // Calculate credential age
                     const createdAt = credentials.createdAt
                         ? new Date(credentials.createdAt)

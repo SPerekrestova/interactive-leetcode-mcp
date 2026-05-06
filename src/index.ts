@@ -6,6 +6,7 @@ import minimist from "minimist";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { restoreCredentials } from "./auth/auth-flow.js";
 import { LeetCodeGlobalService } from "./leetcode/leetcode-global-service.js";
 import { LeetcodeServiceInterface } from "./leetcode/leetcode-service-interface.js";
 import { registerAuthPrompts } from "./mcp/prompts/auth-prompts.js";
@@ -120,6 +121,11 @@ async function main() {
         new LeetCode(credential),
         credential
     );
+
+    // Re-hydrate saved credentials from disk so authenticated tools work
+    // immediately after a server restart without forcing the user to paste
+    // their cookies again.
+    await restoreCredentials(leetcodeService);
 
     // Register MCP prompts for learning mode and workspace guidance
     registerLearningPrompts(server, leetcodeService);
