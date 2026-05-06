@@ -1,4 +1,33 @@
+import {
+    DailyChallenge,
+    Problem,
+    ProblemSearchResult,
+    SimplifiedProblem
+} from "../types/problem.js";
+import {
+    SolutionArticleDetail,
+    SolutionArticleList
+} from "../types/solution.js";
 import { SubmissionResult } from "../types/submission.js";
+import {
+    UserAllSubmissions,
+    UserContestInfo,
+    UserProfile,
+    UserProgressQuestionList,
+    UserRecentACSubmissions,
+    UserRecentSubmissions,
+    UserStatus,
+    UserSubmissionDetail
+} from "../types/user.js";
+
+/** Optional sort/pagination knobs for `fetchQuestionSolutionArticles`. */
+export interface SolutionArticlesQueryOptions {
+    limit?: number;
+    skip?: number;
+    orderBy?: string;
+    userInput?: string;
+    tagSlugs?: string[];
+}
 
 /**
  * Base interface for LeetCode API service implementations.
@@ -11,16 +40,16 @@ export interface LeetcodeServiceInterface {
      * @param username - The LeetCode username to fetch profile data for
      * @returns Promise resolving to the user's profile data
      */
-    fetchUserProfile(username: string): Promise<any>;
+    fetchUserProfile(username: string): Promise<UserProfile>;
 
     /**
      * Retrieves the authenticated user's status information.
      * Includes login status, subscription details, and user identification information.
      *
      * @returns Promise resolving to the user's status information
-     * @throws Error if not authenticated
+     * @throws LeetCodeError(AUTH_REQUIRED) if not authenticated
      */
-    fetchUserStatus(): Promise<any>;
+    fetchUserStatus(): Promise<UserStatus>;
 
     /**
      * Retrieves the authenticated user's submission history with various filtering options.
@@ -33,7 +62,7 @@ export interface LeetcodeServiceInterface {
      * @param options.lang - Optional filter for programming language
      * @param options.status - Optional filter for submission status
      * @returns Promise resolving to the filtered submission data
-     * @throws Error if not authenticated
+     * @throws LeetCodeError(AUTH_REQUIRED) if not authenticated
      */
     fetchUserAllSubmissions(options: {
         offset: number;
@@ -42,7 +71,7 @@ export interface LeetcodeServiceInterface {
         lastKey?: string;
         lang?: string | null;
         status?: string | null;
-    }): Promise<any>;
+    }): Promise<UserAllSubmissions>;
 
     /**
      * Retrieves the authenticated user's progress on problems with filtering options.
@@ -53,14 +82,14 @@ export interface LeetcodeServiceInterface {
      * @param filters.questionStatus - Optional filter for problem status (e.g., "ATTEMPTED", "SOLVED")
      * @param filters.difficulty - Optional array of difficulty levels to filter by
      * @returns Promise resolving to the user's progress data
-     * @throws Error if not authenticated
+     * @throws LeetCodeError(AUTH_REQUIRED) if not authenticated
      */
     fetchUserProgressQuestionList(filters: {
         offset: number;
         limit: number;
         questionStatus?: string;
         difficulty?: string[];
-    }): Promise<any>;
+    }): Promise<UserProgressQuestionList>;
 
     /**
      * Retrieves a user's recent submissions (both accepted and failed).
@@ -69,7 +98,10 @@ export interface LeetcodeServiceInterface {
      * @param limit - Optional maximum number of submissions to return
      * @returns Promise resolving to the recent submissions data
      */
-    fetchUserRecentSubmissions(username: string, limit?: number): Promise<any>;
+    fetchUserRecentSubmissions(
+        username: string,
+        limit?: number
+    ): Promise<UserRecentSubmissions>;
 
     /**
      * Retrieves a user's recent accepted (AC) submissions only.
@@ -81,7 +113,7 @@ export interface LeetcodeServiceInterface {
     fetchUserRecentACSubmissions(
         username: string,
         limit?: number
-    ): Promise<any>;
+    ): Promise<UserRecentACSubmissions>;
 
     /**
      * Retrieves detailed information about a specific submission.
@@ -89,9 +121,9 @@ export interface LeetcodeServiceInterface {
      *
      * @param id - Numeric submission ID
      * @returns Promise resolving to the submission details
-     * @throws Error if not authenticated or submission not found
+     * @throws LeetCodeError(AUTH_REQUIRED) if not authenticated
      */
-    fetchUserSubmissionDetail(id: number): Promise<any>;
+    fetchUserSubmissionDetail(id: number): Promise<UserSubmissionDetail>;
 
     /**
      * Retrieves a user's contest ranking information and participation history.
@@ -100,14 +132,17 @@ export interface LeetcodeServiceInterface {
      * @param attended - Whether to include only contests the user participated in
      * @returns Promise resolving to the contest ranking data
      */
-    fetchUserContestRanking(username: string, attended: boolean): Promise<any>;
+    fetchUserContestRanking(
+        username: string,
+        attended: boolean
+    ): Promise<UserContestInfo>;
 
     /**
      * Retrieves today's LeetCode Daily Challenge problem.
      *
      * @returns Promise resolving to the daily challenge problem data
      */
-    fetchDailyChallenge(): Promise<any>;
+    fetchDailyChallenge(): Promise<DailyChallenge>;
 
     /**
      * Retrieves simplified information about a specific problem.
@@ -115,8 +150,9 @@ export interface LeetcodeServiceInterface {
      *
      * @param titleSlug - Problem identifier/slug as used in the LeetCode URL
      * @returns Promise resolving to the simplified problem details
+     * @throws LeetCodeError(PROBLEM_NOT_FOUND) if the slug doesn't exist
      */
-    fetchProblemSimplified(titleSlug: string): Promise<any>;
+    fetchProblemSimplified(titleSlug: string): Promise<SimplifiedProblem>;
 
     /**
      * Retrieves detailed information about a specific problem.
@@ -124,7 +160,7 @@ export interface LeetcodeServiceInterface {
      * @param titleSlug - Problem identifier/slug as used in the LeetCode URL
      * @returns Promise resolving to the problem details
      */
-    fetchProblem(titleSlug: string): Promise<any>;
+    fetchProblem(titleSlug: string): Promise<Problem>;
 
     /**
      * Searches for problems matching specified criteria.
@@ -144,7 +180,7 @@ export interface LeetcodeServiceInterface {
         limit?: number,
         offset?: number,
         searchKeywords?: string
-    ): Promise<any>;
+    ): Promise<ProblemSearchResult>;
 
     /**
      * Determines if the current service has valid authentication credentials.
@@ -171,8 +207,8 @@ export interface LeetcodeServiceInterface {
      */
     fetchQuestionSolutionArticles(
         questionSlug: string,
-        options?: any
-    ): Promise<any>;
+        options?: SolutionArticlesQueryOptions
+    ): Promise<SolutionArticleList>;
 
     /**
      * Retrieves detailed information about a specific solution.
@@ -180,7 +216,9 @@ export interface LeetcodeServiceInterface {
      * @param identifier - The identifier of the solution (topicId or slug)
      * @returns Promise resolving to the solution detail data
      */
-    fetchSolutionArticleDetail(identifier: string): Promise<any>;
+    fetchSolutionArticleDetail(
+        identifier: string
+    ): Promise<SolutionArticleDetail | null>;
 
     /**
      * Submits a solution to a problem and polls for the result.
