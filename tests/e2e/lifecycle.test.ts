@@ -43,14 +43,18 @@ describe("e2e: server lifecycle", () => {
             "get_problem_submission_report",
             "get_recent_ac_submissions",
             "get_recent_submissions",
+            "get_session_state",
             "get_started",
             "get_user_contest_ranking",
             "get_user_profile",
             "get_user_status",
             "list_problem_solutions",
+            "request_hint",
+            "reset_session",
             "save_leetcode_credentials",
             "search_problems",
             "start_leetcode_auth",
+            "start_problem",
             "submit_solution"
         ];
 
