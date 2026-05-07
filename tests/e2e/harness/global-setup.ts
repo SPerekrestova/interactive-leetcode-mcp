@@ -1,6 +1,7 @@
 /**
  * Vitest globalSetup hook: ensures `build/index.js` exists before any e2e
- * spec spawns the server, and that it's at least as fresh as `src/`.
+ * spec spawns the server, and that it's at least as fresh as everything
+ * under `src/`.
  *
  * Without this, an unsuspecting `npm run test:e2e` after editing source
  * would silently exercise a stale binary and report green, hiding real
@@ -8,7 +9,8 @@
  * blind-spot.
  */
 import { execFile } from "node:child_process";
-import { stat } from "node:fs/promises";
+import { readdir, stat } from "node:fs/promises";
+import { join } from "node:path";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
@@ -28,14 +30,33 @@ export default async function setup(): Promise<void> {
 }
 
 async function needsRebuild(): Promise<boolean> {
+    let binMtime: number;
     try {
-        const [binStat, srcStat] = await Promise.all([
-            stat("build/index.js"),
-            stat("src/index.ts")
-        ]);
-        return binStat.mtimeMs < srcStat.mtimeMs;
+        binMtime = (await stat("build/index.js")).mtimeMs;
     } catch {
-        // Either file missing — definitely need to (re)build.
         return true;
     }
+    // Walk every `.ts` file under `src/` — comparing only against
+    // `src/index.ts` would let edits to any other module slip through.
+    const srcMtime = await maxMtimeUnder("src");
+    return binMtime < srcMtime;
+}
+
+/** Recursively returns the largest mtime among `.ts` files under `dir`. */
+async function maxMtimeUnder(dir: string): Promise<number> {
+    let max = 0;
+    const entries = await readdir(dir, { withFileTypes: true });
+    await Promise.all(
+        entries.map(async (entry) => {
+            const path = join(dir, entry.name);
+            if (entry.isDirectory()) {
+                const sub = await maxMtimeUnder(path);
+                if (sub > max) max = sub;
+            } else if (entry.isFile() && entry.name.endsWith(".ts")) {
+                const m = (await stat(path)).mtimeMs;
+                if (m > max) max = m;
+            }
+        })
+    );
+    return max;
 }
