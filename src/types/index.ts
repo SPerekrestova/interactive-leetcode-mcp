@@ -7,6 +7,7 @@
 export * from "./credentials.js";
 export * from "./errors.js";
 export * from "./problem.js";
+export * from "./session.js";
 export * from "./solution.js";
 export * from "./submission.js";
 export * from "./user.js";
