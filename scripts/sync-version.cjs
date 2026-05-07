@@ -49,11 +49,10 @@ if (fs.existsSync(marketplacePath)) {
 const skillPaths = [
     "skills/interactive-leetcode-mcp/SKILL.md",
     ".claude/skills/using-interactive-leetcode-mcp/SKILL.md",
-    "clawhub-skill/interactive-leetcode-mcp/SKILL.md",
+    "clawhub-skill/interactive-leetcode-mcp/SKILL.md"
 ];
 
-const versionPattern =
-    /@sperekrestova\/interactive-leetcode-mcp@[\w.-]+/g;
+const versionPattern = /@sperekrestova\/interactive-leetcode-mcp@[\w.-]+/g;
 const versionReplacement = `@sperekrestova/interactive-leetcode-mcp@${version}`;
 
 for (const rel of skillPaths) {
