@@ -1,59 +1,71 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import type { SessionService } from "../../domain/session-service.js";
 import { LeetcodeServiceInterface } from "../../leetcode/leetcode-service-interface.js";
+import { errorEnvelope } from "./session-tools.js";
 import { ToolRegistry } from "./tool-registry.js";
 
 /**
- * Solution tool registry class that handles registration of LeetCode solution-related tools.
- * This class manages tools for accessing solutions, filtering solutions, and reading solution details.
+ * Solution tool registry — community-solution access.
+ *
+ * Both tools are gated by the pedagogy state machine: they reject with
+ * `HINT_LEVEL_TOO_LOW` until the active session for the slug has reached
+ * the maximum hint level. The agent is expected to drive the user
+ * through `request_hint` first.
  */
 export class SolutionToolRegistry extends ToolRegistry {
+    constructor(
+        server: McpServer,
+        leetcodeService: LeetcodeServiceInterface,
+        private readonly sessions: SessionService
+    ) {
+        super(server, leetcodeService);
+    }
+
     protected registerPublic(): void {
-        // Problem solutions listing tool (Global-specific)
         this.server.registerTool(
             "list_problem_solutions",
             {
                 description:
-                    "Retrieves a list of community solutions for a specific LeetCode problem, including only metadata like topicId. To view the full content of a solution, use the 'get_problem_solution' tool with the topicId returned by this tool.",
-
+                    "Retrieves community solution metadata (topicIds) for a problem. GATED: rejects with HINT_LEVEL_TOO_LOW unless the active session for the slug has reached the maximum hint level. Drive the user through request_hint until that level is reached.",
                 inputSchema: {
                     questionSlug: z
                         .string()
                         .describe(
-                            "The URL slug/identifier of the problem to retrieve solutions for (e.g., 'two-sum', 'add-two-numbers'). This is the same string that appears in the LeetCode problem URL after '/problems/'"
+                            "The URL slug of the problem (e.g., 'two-sum')."
                         ),
                     limit: z
                         .number()
                         .optional()
                         .default(10)
                         .describe(
-                            "Maximum number of solutions to return per request. Used for pagination and controlling response size. Default is 10 if not specified. Must be a positive integer."
+                            "Maximum number of solutions to return per request. Default 10. Must be a positive integer."
                         ),
                     skip: z
                         .number()
                         .optional()
                         .describe(
-                            "Number of solutions to skip before starting to collect results. Used in conjunction with 'limit' for implementing pagination. Default is 0 if not specified. Must be a non-negative integer."
+                            "Number of solutions to skip before collecting results. Used with `limit` for pagination."
                         ),
                     orderBy: z
                         .enum(["HOT", "MOST_RECENT", "MOST_VOTES"])
                         .default("HOT")
                         .optional()
                         .describe(
-                            "Sorting criteria for the returned solutions. 'DEFAULT' sorts by LeetCode's default algorithm (typically a combination of recency and popularity), 'MOST_VOTES' sorts by the number of upvotes (highest first), and 'MOST_RECENT' sorts by publication date (newest first)."
+                            "Sorting criteria. 'HOT' is LeetCode's default (recency × popularity), 'MOST_VOTES' = upvotes, 'MOST_RECENT' = newest."
                         ),
                     userInput: z
                         .string()
                         .optional()
                         .describe(
-                            "Search term to filter solutions by title, content, or author name. Case insensitive. Useful for finding specific approaches or algorithms mentioned in solutions."
+                            "Search term to filter solutions by title, content, or author name. Case-insensitive."
                         ),
                     tagSlugs: z
                         .array(z.string())
                         .optional()
                         .default([])
                         .describe(
-                            "Array of tag identifiers to filter solutions by programming languages (e.g., 'python', 'java') or problem algorithm/data-structure tags (e.g., 'dynamic-programming', 'recursion'). Only solutions tagged with at least one of the specified tags will be returned."
+                            "Tag slugs to filter by (languages or algorithm tags). Solutions must match at least one tag."
                         )
                 }
             },
@@ -66,20 +78,12 @@ export class SolutionToolRegistry extends ToolRegistry {
                 tagSlugs
             }) => {
                 try {
-                    const options = {
-                        limit,
-                        skip,
-                        orderBy,
-                        userInput,
-                        tagSlugs
-                    };
-
+                    await this.sessions.assertSolutionUnlocked(questionSlug);
                     const data =
                         await this.leetcodeService.fetchQuestionSolutionArticles(
                             questionSlug,
-                            options
+                            { limit, skip, orderBy, userInput, tagSlugs }
                         );
-
                     return {
                         content: [
                             {
@@ -91,83 +95,69 @@ export class SolutionToolRegistry extends ToolRegistry {
                             }
                         ]
                     };
-                } catch (error: any) {
-                    return {
-                        content: [
-                            {
-                                type: "text",
-                                text: JSON.stringify({
-                                    error: "Failed to fetch solutions",
-                                    message: error.message
-                                })
-                            }
-                        ]
-                    };
+                } catch (error) {
+                    return errorEnvelope("Failed to fetch solutions", error);
                 }
             }
         );
 
-        // Solution article detail tool (Global-specific)
         this.server.registerTool(
             "get_problem_solution",
             {
                 description:
-                    "Retrieves the complete content and metadata of a specific solution, including the full article text, author information, and related navigation links. This returns a FULL community solution — only call this after the user has exhausted progressive hints or has explicitly requested the solution after receiving earlier hints.",
-
+                    "Retrieves the full content of a specific community solution. GATED: rejects with HINT_LEVEL_TOO_LOW unless the session for `titleSlug` has reached the maximum hint level. Pass the topicId returned by `list_problem_solutions`.",
                 inputSchema: {
                     topicId: z
                         .string()
                         .describe(
-                            "The unique topic ID of the solution to retrieve. This ID can be obtained from the 'topicId' field in the response of the 'list_problem_solutions' tool. Format is typically a string of numbers and letters that uniquely identifies the solution in LeetCode's database."
+                            "The unique topic ID of the solution, returned by list_problem_solutions."
+                        ),
+                    titleSlug: z
+                        .string()
+                        .describe(
+                            "The URL slug of the problem the solution belongs to. Required to verify the session has reached the unlock level."
                         )
                 }
             },
-            async ({ topicId }) => {
+            async ({ topicId, titleSlug }) => {
                 try {
+                    await this.sessions.assertSolutionUnlocked(titleSlug);
                     const data =
                         await this.leetcodeService.fetchSolutionArticleDetail(
                             topicId
                         );
-
                     return {
                         content: [
                             {
                                 type: "text",
                                 text: JSON.stringify({
                                     topicId,
+                                    titleSlug,
                                     solution: data
                                 })
                             }
                         ]
                     };
-                } catch (error: any) {
-                    return {
-                        content: [
-                            {
-                                type: "text",
-                                text: JSON.stringify({
-                                    error: "Failed to fetch solution detail",
-                                    message: error.message
-                                })
-                            }
-                        ]
-                    };
+                } catch (error) {
+                    return errorEnvelope(
+                        "Failed to fetch solution detail",
+                        error
+                    );
                 }
             }
         );
     }
 }
 
-/**
- * Registers all solution-related tools with the MCP server.
- *
- * @param server - The MCP server instance to register tools with
- * @param leetcodeService - The LeetCode service implementation to use for API calls
- */
 export function registerSolutionTools(
     server: McpServer,
-    leetcodeService: LeetcodeServiceInterface
+    leetcodeService: LeetcodeServiceInterface,
+    sessions: SessionService
 ): void {
-    const registry = new SolutionToolRegistry(server, leetcodeService);
+    const registry = new SolutionToolRegistry(
+        server,
+        leetcodeService,
+        sessions
+    );
     registry.register();
 }
