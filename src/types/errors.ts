@@ -38,13 +38,14 @@ export type ErrorCodeValue = (typeof ErrorCode)[keyof typeof ErrorCode];
  */
 export class LeetCodeError extends Error {
     public readonly code: ErrorCodeValue;
-    public readonly cause?: unknown;
 
     constructor(code: ErrorCodeValue, message: string, cause?: unknown) {
-        super(message);
+        // Forward `cause` to the native ES2022 `Error` field so loggers and
+        // stack-walkers that rely on the standard chain see it without us
+        // shadowing it via a redeclared class field.
+        super(message, cause === undefined ? undefined : { cause });
         this.name = "LeetCodeError";
         this.code = code;
-        this.cause = cause;
     }
 }
 
