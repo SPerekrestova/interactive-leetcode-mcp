@@ -41,19 +41,11 @@ export async function restoreCredentials(
         return { status: "invalid", reason: "load_failed" };
     }
 
-    let username: string | null = null;
-    try {
-        username = await service.validateCredentials(
-            credentials.csrftoken,
-            credentials.LEETCODE_SESSION
-        );
-    } catch (error) {
-        logger.warn(
-            "Saved credentials could not be validated against LeetCode: %s",
-            error instanceof Error ? error.message : String(error)
-        );
-        return { status: "invalid", reason: "expired" };
-    }
+    const username = await applyValidatedCredentials(
+        service,
+        credentials.csrftoken,
+        credentials.LEETCODE_SESSION
+    );
 
     if (!username) {
         logger.info(
@@ -62,13 +54,31 @@ export async function restoreCredentials(
         return { status: "invalid", reason: "expired" };
     }
 
-    service.updateCredentials(
-        credentials.csrftoken,
-        credentials.LEETCODE_SESSION
-    );
     logger.info(
         "Restored LeetCode session for %s from saved credentials.",
         username
     );
     return { status: "restored", username };
+}
+
+/**
+ * Validates `csrf` / `session` against LeetCode and, on success, pushes them
+ * into the running service so the very next authenticated tool call works
+ * without forcing a server restart.
+ *
+ * Returns the validated username, or `null` if LeetCode rejected the cookies.
+ * Trusts the `validateCredentials` interface contract (`Promise<string | null>`)
+ * and does not catch — any exception thrown by the service propagates.
+ */
+export async function applyValidatedCredentials(
+    service: LeetcodeServiceInterface,
+    csrf: string,
+    session: string
+): Promise<string | null> {
+    const username = await service.validateCredentials(csrf, session);
+    if (!username) {
+        return null;
+    }
+    service.updateCredentials(csrf, session);
+    return username;
 }

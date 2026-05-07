@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { restoreCredentials } from "../../src/auth/auth-flow.js";
+import {
+    applyValidatedCredentials,
+    restoreCredentials
+} from "../../src/auth/auth-flow.js";
 import type { LeetcodeServiceInterface } from "../../src/leetcode/leetcode-service-interface.js";
 import type { CredentialsStorage } from "../../src/types/credentials.js";
 
@@ -75,7 +78,10 @@ describe("restoreCredentials", () => {
         expect(service.updateCredentials).not.toHaveBeenCalled();
     });
 
-    it("returns invalid/expired and swallows the error when validate throws", async () => {
+    it("propagates exceptions thrown by validateCredentials", async () => {
+        // The interface contract is `Promise<string | null>`; `restoreCredentials`
+        // does not catch. If a service impl violates that contract by throwing,
+        // surface the error rather than silently swallowing.
         const service = makeService({
             validateCredentials: vi.fn().mockRejectedValue(new Error("boom"))
         });
@@ -87,9 +93,9 @@ describe("restoreCredentials", () => {
             })
         });
 
-        const outcome = await restoreCredentials(service, storage);
-
-        expect(outcome).toEqual({ status: "invalid", reason: "expired" });
+        await expect(restoreCredentials(service, storage)).rejects.toThrow(
+            "boom"
+        );
         expect(service.updateCredentials).not.toHaveBeenCalled();
     });
 
@@ -111,6 +117,45 @@ describe("restoreCredentials", () => {
         expect(service.updateCredentials).toHaveBeenCalledWith(
             "csrf-token",
             "session-token"
+        );
+    });
+});
+
+describe("applyValidatedCredentials", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it("returns null and does not update when LeetCode rejects the cookies", async () => {
+        const service = makeService({
+            validateCredentials: vi.fn().mockResolvedValue(null)
+        });
+
+        const username = await applyValidatedCredentials(
+            service,
+            "csrf",
+            "session"
+        );
+
+        expect(username).toBeNull();
+        expect(service.updateCredentials).not.toHaveBeenCalled();
+    });
+
+    it("returns the username and pushes creds into the service when valid", async () => {
+        const service = makeService({
+            validateCredentials: vi.fn().mockResolvedValue("alice")
+        });
+
+        const username = await applyValidatedCredentials(
+            service,
+            "csrf",
+            "session"
+        );
+
+        expect(username).toBe("alice");
+        expect(service.updateCredentials).toHaveBeenCalledWith(
+            "csrf",
+            "session"
         );
     });
 });
