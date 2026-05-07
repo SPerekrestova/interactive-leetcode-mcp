@@ -20,7 +20,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import type { E2EFixture } from "./types.js";
 
 const HARNESS_DIR = fileURLToPath(new URL(".", import.meta.url));
@@ -75,9 +75,15 @@ export async function spawnServer(
     const home =
         options.home ?? (await mkdtemp(join(tmpdir(), "leetcode-mcp-e2e-")));
 
+    // Fixtures live in their own temp directory regardless of who owns
+    // `HOME`, so a caller-provided `HOME` never gets a stray
+    // `fixture.json` byproduct. The harness owns the fixture dir and
+    // always cleans it up.
+    let fixtureDir: string | undefined;
     let fixturePath: string | undefined;
     if (options.fixture) {
-        fixturePath = join(home, "fixture.json");
+        fixtureDir = await mkdtemp(join(tmpdir(), "leetcode-mcp-e2e-fix-"));
+        fixturePath = join(fixtureDir, "fixture.json");
         await writeFile(fixturePath, JSON.stringify(options.fixture), "utf-8");
     }
 
@@ -86,7 +92,10 @@ export async function spawnServer(
         // node_modules and the test runner's cwd matches the repo root.
         PATH: process.env.PATH ?? "",
         HOME: home,
-        NODE_OPTIONS: `--import ${pathToImportUrl(PRELOAD)}`,
+        // `pathToFileURL` percent-encodes path segments so the preload
+        // import works even when the harness path contains spaces or
+        // other URL-reserved characters (common on macOS user dirs).
+        NODE_OPTIONS: `--import ${pathToFileURL(PRELOAD).href}`,
         ...(fixturePath ? { E2E_FIXTURE_PATH: fixturePath } : {}),
         ...(options.env ?? {})
     };
@@ -116,15 +125,10 @@ export async function spawnServer(
         if (!homeWasProvided) {
             await rm(home, { recursive: true, force: true });
         }
+        if (fixtureDir) {
+            await rm(fixtureDir, { recursive: true, force: true });
+        }
     };
 
     return { client, home, cleanup };
-}
-
-/**
- * Converts an absolute filesystem path to a `file://` URL — required by
- * `NODE_OPTIONS=--import` for ESM preload scripts on macOS / Linux.
- */
-function pathToImportUrl(absolutePath: string): string {
-    return new URL(`file://${absolutePath}`).href;
 }
