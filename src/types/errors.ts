@@ -25,7 +25,20 @@ export const ErrorCode = {
     /** LeetCode returned a payload that didn't match the expected schema. */
     UPSTREAM_PAYLOAD_INVALID: "UPSTREAM_PAYLOAD_INVALID",
     /** Catch-all for unexpected upstream errors. */
-    UPSTREAM_ERROR: "UPSTREAM_ERROR"
+    UPSTREAM_ERROR: "UPSTREAM_ERROR",
+    /**
+     * Tutoring gate: the caller asked for content (typically a full
+     * solution) that is gated behind a higher hint level than the active
+     * session has reached. The pedagogy state machine refuses; the agent
+     * is expected to drive the user through `request_hint` first.
+     */
+    HINT_LEVEL_TOO_LOW: "HINT_LEVEL_TOO_LOW",
+    /**
+     * Tutoring gate: the operation requires an active session for a
+     * particular problem slug, but no `start_problem` has been called for
+     * it (or the session was reset).
+     */
+    SESSION_NOT_FOUND: "SESSION_NOT_FOUND"
 } as const;
 
 export type ErrorCodeValue = (typeof ErrorCode)[keyof typeof ErrorCode];
