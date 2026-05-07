@@ -69,8 +69,8 @@ export interface LeetcodeServiceInterface {
         limit: number;
         questionSlug?: string;
         lastKey?: string;
-        lang?: string | null;
-        status?: string | null;
+        lang?: string;
+        status?: string;
     }): Promise<UserAllSubmissions>;
 
     /**
@@ -159,6 +159,7 @@ export interface LeetcodeServiceInterface {
      *
      * @param titleSlug - Problem identifier/slug as used in the LeetCode URL
      * @returns Promise resolving to the problem details
+     * @throws LeetCodeError(PROBLEM_NOT_FOUND) if the slug doesn't exist
      */
     fetchProblem(titleSlug: string): Promise<Problem>;
 

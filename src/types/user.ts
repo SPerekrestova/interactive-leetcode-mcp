@@ -5,8 +5,10 @@
 /** Result of `fetchUserStatus()` (called for the authenticated user). */
 export interface UserStatus {
     isSignedIn: boolean;
-    username: string;
-    avatar: string;
+    /** `null` when signed out, or signed in but no display username set. */
+    username: string | null;
+    /** `null` when signed out, or signed in but no avatar set. */
+    avatar: string | null;
     isAdmin: boolean;
 }
 

@@ -101,8 +101,8 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
         const res = await this.leetCodeApi.whoami();
         return {
             isSignedIn: res?.isSignedIn ?? false,
-            username: res?.username ?? "",
-            avatar: res?.avatar ?? "",
+            username: res?.username ?? null,
+            avatar: res?.avatar ?? null,
             isAdmin: res?.isAdmin ?? false
         };
     }
@@ -212,21 +212,22 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
     }
 
     async fetchProblem(titleSlug: string): Promise<Problem> {
-        return (await this.leetCodeApi.problem(
+        const problem = (await this.leetCodeApi.problem(
             titleSlug
-        )) as unknown as Problem;
-    }
-
-    async fetchProblemSimplified(
-        titleSlug: string
-    ): Promise<SimplifiedProblem> {
-        const problem = await this.fetchProblem(titleSlug);
+        )) as unknown as Problem | null | undefined;
         if (!problem) {
             throw new LeetCodeError(
                 ErrorCode.PROBLEM_NOT_FOUND,
                 `Problem ${titleSlug} not found`
             );
         }
+        return problem;
+    }
+
+    async fetchProblemSimplified(
+        titleSlug: string
+    ): Promise<SimplifiedProblem> {
+        const problem = await this.fetchProblem(titleSlug);
 
         const filteredTopicTags: string[] =
             problem.topicTags?.map((tag: TopicTag) => tag.slug) ?? [];
@@ -320,9 +321,9 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
         };
     }
 
-    async fetchUserProgressQuestionList(options?: {
-        offset?: number;
-        limit?: number;
+    async fetchUserProgressQuestionList(filters: {
+        offset: number;
+        limit: number;
         questionStatus?: string;
         difficulty?: string[];
     }): Promise<UserProgressQuestionList> {
@@ -336,15 +337,15 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
         // Cast through unknown because leetcode-query types these as enums
         // (LeetCodeQuestionStatus / LeetCodeDifficulty) but accepts the raw
         // strings we forward from MCP tool inputs.
-        const filters = {
-            skip: options?.offset || 0,
-            limit: options?.limit || 20,
-            questionStatus: options?.questionStatus as unknown as undefined,
-            difficulty: options?.difficulty as unknown as undefined
+        const upstreamFilters = {
+            skip: filters.offset,
+            limit: filters.limit,
+            questionStatus: filters.questionStatus as unknown as undefined,
+            difficulty: filters.difficulty as unknown as undefined
         };
 
         return (await this.leetCodeApi.user_progress_questions(
-            filters
+            upstreamFilters
         )) as unknown as UserProgressQuestionList;
     }
 
