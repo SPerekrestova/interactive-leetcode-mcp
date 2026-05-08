@@ -19,7 +19,7 @@
  *   - stdout/stderr captured with a 1 MB ceiling; runaway output gets
  *     truncated with a marker rather than blowing memory
  */
-import { exec as execCb, spawn } from "node:child_process";
+import { execFile as execFileCb, spawn } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -39,7 +39,10 @@ import type { LocalRunner } from "./runner.js";
 import { IMPLEMENTED_LANGUAGES, SUPPORTED_LANGUAGES } from "./runner.js";
 import { wrapWithSandbox } from "./sandbox.js";
 
-const execFile = promisify(execCb);
+// `execFile` (no shell) — never `promisify(exec)`, which routes through
+// `/bin/sh -c` and is a shell-expansion foot-gun if anyone interpolates
+// a dynamic value into a probe in the future.
+const execFile = promisify(execFileCb);
 
 const MAX_OUTPUT_BYTES = 1_000_000; // 1 MB per stream
 const DEFAULT_TIMEOUT_MS = 5_000;
@@ -108,7 +111,8 @@ async function probeLanguage(language: RunnerLanguage): Promise<ProbeResult> {
     const spec = LANGUAGES[language];
     try {
         const { stdout, stderr } = await execFile(
-            `${spec.probe.cmd} ${spec.probe.args.join(" ")}`,
+            spec.probe.cmd,
+            spec.probe.args,
             { timeout: 2000 }
         );
         // `python3 --version` and `go version` write to stdout; `java
@@ -120,10 +124,9 @@ async function probeLanguage(language: RunnerLanguage): Promise<ProbeResult> {
         };
         try {
             const { stdout: which } = await execFile(
-                `which ${spec.probe.cmd}`,
-                {
-                    timeout: 1000
-                }
+                "which",
+                [spec.probe.cmd],
+                { timeout: 1000 }
             );
             result.path = which.trim() || undefined;
         } catch {
@@ -257,17 +260,33 @@ export class SubprocessRunner implements LocalRunner {
             let timedOut = false;
             let killTimer: NodeJS.Timeout | undefined;
 
-            child.stdout?.on("data", (chunk: Buffer) => {
-                if (stdoutBytes < MAX_OUTPUT_BYTES) {
-                    stdout.push(chunk);
-                    stdoutBytes += chunk.length;
+            // Tight guard: never let the buffered total exceed
+            // `MAX_OUTPUT_BYTES` even by a chunk. We slice the
+            // overflowing chunk to the exact remaining headroom and
+            // drop the rest. `clampOutput` still runs at finalize as a
+            // belt-and-braces final cap.
+            const captureChunk = (
+                buffers: Buffer[],
+                bytes: number,
+                chunk: Buffer
+            ): number => {
+                const remaining = MAX_OUTPUT_BYTES - bytes;
+                if (remaining <= 0) {
+                    return bytes;
                 }
+                if (chunk.length <= remaining) {
+                    buffers.push(chunk);
+                    return bytes + chunk.length;
+                }
+                buffers.push(chunk.subarray(0, remaining));
+                return bytes + remaining;
+            };
+
+            child.stdout?.on("data", (chunk: Buffer) => {
+                stdoutBytes = captureChunk(stdout, stdoutBytes, chunk);
             });
             child.stderr?.on("data", (chunk: Buffer) => {
-                if (stderrBytes < MAX_OUTPUT_BYTES) {
-                    stderr.push(chunk);
-                    stderrBytes += chunk.length;
-                }
+                stderrBytes = captureChunk(stderr, stderrBytes, chunk);
             });
 
             const timer = setTimeout(() => {

@@ -18,12 +18,13 @@
  * run without a sandbox can set `LEETCODE_MCP_REQUIRE_SANDBOX=1`; the
  * tool layer enforces this — the runner only reports.
  */
-import { exec as execCb } from "node:child_process";
+import { execFile as execFileCb } from "node:child_process";
+import { access, constants as fsConstants } from "node:fs/promises";
 import { promisify } from "node:util";
 
 import type { SandboxKind } from "../types/index.js";
 
-const execFile = promisify(execCb);
+const execFile = promisify(execFileCb);
 
 interface DetectedSandbox {
     kind: SandboxKind;
@@ -35,15 +36,18 @@ interface DetectedSandbox {
 let cached: DetectedSandbox | undefined;
 
 /**
- * Returns whether `<bin> --version` (or equivalent) succeeds. We do a
- * shell-out rather than `which` so the answer is uniform across platforms.
+ * Returns whether `<bin> --version` succeeds. Uses the no-shell
+ * `execFile` so the probe never re-interprets `bin`/`args` through
+ * `/bin/sh -c` — important because future callers might be tempted to
+ * pass dynamic values, and the default `child_process.exec` is a
+ * shell-expansion foot-gun.
  */
 async function probe(
-    cmd: string,
+    bin: string,
     args: string[] = ["--version"]
 ): Promise<boolean> {
     try {
-        await execFile(`${cmd} ${args.join(" ")}`, { timeout: 1500 });
+        await execFile(bin, args, { timeout: 1500 });
         return true;
     } catch {
         return false;
@@ -62,11 +66,14 @@ export async function detectSandbox(): Promise<DetectedSandbox> {
 
     const platform = process.platform;
     if (platform === "darwin") {
-        // sandbox-exec is /usr/bin/sandbox-exec on every macOS we care
-        // about. It accepts no `--version`; probe with `-help` (any
-        // exit code is fine — it always prints to stderr).
+        // sandbox-exec lives at /usr/bin/sandbox-exec on every macOS
+        // version we care about. Detect by file existence + executable
+        // bit rather than spawning the binary — its `-help` flag is
+        // undocumented and exits non-zero on some macOS versions, which
+        // would silently fall through to `kind: "none"` and lie to
+        // users that no sandbox is available.
         try {
-            await execFile("/usr/bin/sandbox-exec -help", { timeout: 1500 });
+            await access("/usr/bin/sandbox-exec", fsConstants.X_OK);
             cached = { kind: "sandbox-exec", path: "/usr/bin/sandbox-exec" };
             return cached;
         } catch {
