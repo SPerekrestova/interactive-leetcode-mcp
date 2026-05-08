@@ -51,6 +51,8 @@ describe("e2e: server lifecycle", () => {
             "list_problem_solutions",
             "request_hint",
             "reset_session",
+            "run_local_tests",
+            "runner_doctor",
             "save_leetcode_credentials",
             "search_problems",
             "start_leetcode_auth",
