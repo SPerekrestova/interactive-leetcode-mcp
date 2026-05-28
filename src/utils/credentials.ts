@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import { homedir } from "os";
-import { join } from "path";
+import { join, resolve, relative } from "path";
 import {
     CredentialsStorage,
     LeetCodeCredentials
@@ -14,7 +14,13 @@ export class FileCredentialsStorage implements CredentialsStorage {
 
     constructor(credentialsDir?: string) {
         this.credentialsDir = credentialsDir ?? DEFAULT_CREDENTIALS_DIR;
-        this.credentialsFile = join(this.credentialsDir, "credentials.json");
+        const base = resolve(this.credentialsDir);
+        const target = resolve(base, "credentials.json");
+        const rel = relative(base, target);
+        if (rel.startsWith("..") || resolve(rel) === rel) {
+            throw new Error("Invalid credentials path");
+        }
+        this.credentialsFile = target;
     }
 
     async exists(): Promise<boolean> {
