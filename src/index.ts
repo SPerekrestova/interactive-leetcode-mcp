@@ -19,10 +19,12 @@ import { registerAuthTools } from "./mcp/tools/auth-tools.js";
 import { registerContestTools } from "./mcp/tools/contest-tools.js";
 import { registerOnboardingTools } from "./mcp/tools/onboarding-tools.js";
 import { registerProblemTools } from "./mcp/tools/problem-tools.js";
+import { registerRunnerTools } from "./mcp/tools/runner-tools.js";
 import { registerSessionTools } from "./mcp/tools/session-tools.js";
 import { registerSolutionTools } from "./mcp/tools/solution-tools.js";
 import { registerSubmissionTools } from "./mcp/tools/submission-tools.js";
 import { registerUserTools } from "./mcp/tools/user-tools.js";
+import { SubprocessRunner } from "./runner/subprocess-runner.js";
 import logger from "./utils/logger.js";
 
 /**
@@ -145,6 +147,11 @@ async function main() {
     // returning content.
     const sessions = new SessionService();
 
+    // Local subprocess runner: probes python3 / go / java on first use,
+    // wraps with bwrap / firejail / sandbox-exec where available, and
+    // backs the `run_local_tests` tool. Phase 4a ships python3 only.
+    const runner = new SubprocessRunner();
+
     // Register MCP prompts for learning mode and workspace guidance
     registerLearningPrompts(server, leetcodeService);
 
@@ -158,8 +165,9 @@ async function main() {
     registerContestTools(server, leetcodeService);
     registerSessionTools(server, leetcodeService, sessions);
     registerSolutionTools(server, leetcodeService, sessions);
+    registerRunnerTools(server, leetcodeService, sessions, runner);
     registerAuthTools(server, leetcodeService);
-    registerSubmissionTools(server, leetcodeService);
+    registerSubmissionTools(server, leetcodeService, sessions);
 
     registerProblemResources(server, leetcodeService);
     registerSolutionResources(server, leetcodeService);

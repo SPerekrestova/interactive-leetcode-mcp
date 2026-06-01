@@ -38,7 +38,37 @@ export const ErrorCode = {
      * particular problem slug, but no `start_problem` has been called for
      * it (or the session was reset).
      */
-    SESSION_NOT_FOUND: "SESSION_NOT_FOUND"
+    SESSION_NOT_FOUND: "SESSION_NOT_FOUND",
+    /**
+     * `run_local_tests` was asked for a language the local runner has no
+     * harness for. `submit_solution` keeps working for these languages —
+     * the runner is purely additive.
+     */
+    RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE: "RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE",
+    /**
+     * The language is supported in principle but the required runtime
+     * binary (e.g. `python3`, `go`, `java`) was not found on PATH. The
+     * `doctor` subcommand reports which runtimes are detected.
+     */
+    LANGUAGE_RUNTIME_NOT_FOUND: "LANGUAGE_RUNTIME_NOT_FOUND",
+    /**
+     * The user's code exceeded the per-run wall-clock budget. The runner
+     * killed the process; partial output (if any) is included in the
+     * result envelope.
+     */
+    RUNNER_TIMEOUT: "RUNNER_TIMEOUT",
+    /**
+     * `LEETCODE_MCP_REQUIRE_SANDBOX=1` is set but no OS sandbox tool was
+     * found on this host. The runner refuses to fall back to the unsandboxed
+     * subprocess path.
+     */
+    SANDBOX_REQUIRED: "SANDBOX_REQUIRED",
+    /**
+     * Strict mode is enabled (`LEETCODE_MCP_STRICT_MODE=1`) and
+     * `submit_solution` was called before `run_local_tests` last passed.
+     * Drives the recommended local-first practice loop.
+     */
+    LOCAL_TESTS_NOT_PASSED: "LOCAL_TESTS_NOT_PASSED"
 } as const;
 
 export type ErrorCodeValue = (typeof ErrorCode)[keyof typeof ErrorCode];

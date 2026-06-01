@@ -132,7 +132,13 @@ export class SessionService {
         );
     }
 
-    private async requireSession(slug: string): Promise<SessionState> {
+    /**
+     * Public variant of the session lookup — throws `SESSION_NOT_FOUND`
+     * when the user never opened the slug. Used by the runner-tools
+     * layer to keep `run_local_tests` aligned with the pedagogy state
+     * machine (no orphaned runs).
+     */
+    async requireSession(slug: string): Promise<SessionState> {
         const session = await this.store.load(slug);
         if (!session) {
             throw new LeetCodeError(
@@ -141,5 +147,25 @@ export class SessionService {
             );
         }
         return session;
+    }
+
+    /**
+     * Updates the session after a `run_local_tests` invocation.
+     * Increments `attempts`, sets `lastLocalRunPassed`, and bumps
+     * `status` to "attempting" on the first run (so subsequent
+     * resets-then-runs keep the lifecycle accurate).
+     */
+    async recordLocalRun(slug: string, passed: boolean): Promise<SessionState> {
+        const session = await this.requireSession(slug);
+        const next: SessionState = {
+            ...session,
+            attempts: session.attempts + 1,
+            lastLocalRunPassed: passed,
+            status:
+                session.status === "started" ? "attempting" : session.status,
+            updatedAt: new Date().toISOString()
+        };
+        await this.store.save(next);
+        return next;
     }
 }
