@@ -49,11 +49,17 @@ describe("SessionService — Phase 4 additions", () => {
             const after1 = await service.recordLocalRun("two-sum", false);
             expect(after1.attempts).toBe(1);
             expect(after1.lastLocalRunPassed).toBe(false);
+            expect(after1.lastLocalRunSnapshot).toBeNull();
             expect(after1.status).toBe("attempting");
 
-            const after2 = await service.recordLocalRun("two-sum", true);
+            const after2 = await service.recordLocalRun(
+                "two-sum",
+                true,
+                "snapshot-1"
+            );
             expect(after2.attempts).toBe(2);
             expect(after2.lastLocalRunPassed).toBe(true);
+            expect(after2.lastLocalRunSnapshot).toBe("snapshot-1");
             // Status should not regress from "attempting".
             expect(after2.status).toBe("attempting");
         });

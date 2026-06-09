@@ -57,12 +57,14 @@ describe("resetSession", () => {
             hintLevel: 3,
             attempts: 5,
             lastLocalRunPassed: true,
+            lastLocalRunSnapshot: "snapshot-1",
             status: "attempting"
         });
         const next = resetSession(before);
         expect(next.hintLevel).toBe(0);
         expect(next.attempts).toBe(0);
         expect(next.lastLocalRunPassed).toBeNull();
+        expect(next.lastLocalRunSnapshot).toBeNull();
         expect(next.status).toBe("started");
     });
 

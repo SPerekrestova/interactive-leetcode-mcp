@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { createLocalRunSnapshot } from "../../domain/local-run-snapshot.js";
 import type { SessionService } from "../../domain/session-service.js";
 import { LeetcodeServiceInterface } from "../../leetcode/leetcode-service-interface.js";
 import { ErrorCode, LeetCodeError } from "../../types/index.js";
@@ -82,10 +83,17 @@ export class SubmissionToolRegistry extends ToolRegistry {
                         }
                         const session =
                             await this.sessions.requireSession(problemSlug);
-                        if (session.lastLocalRunPassed !== true) {
+                        const snapshot = createLocalRunSnapshot({
+                            code,
+                            language
+                        });
+                        if (
+                            session.lastLocalRunPassed !== true ||
+                            session.lastLocalRunSnapshot !== snapshot
+                        ) {
                             throw new LeetCodeError(
                                 ErrorCode.LOCAL_TESTS_NOT_PASSED,
-                                "Strict mode is enabled and the most recent run_local_tests for this problem did not pass. Run it again and submit only when locals are green."
+                                "Strict mode is enabled and submit_solution requires run_local_tests to pass for the exact code and language being submitted."
                             );
                         }
                     }

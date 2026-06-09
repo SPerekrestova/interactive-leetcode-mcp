@@ -55,6 +55,7 @@ export function resetSession(session: SessionState): SessionState {
         hintLevel: 0,
         attempts: 0,
         lastLocalRunPassed: null,
+        lastLocalRunSnapshot: null,
         status: "started",
         updatedAt: new Date().toISOString()
     };

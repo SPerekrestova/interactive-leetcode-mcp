@@ -217,12 +217,14 @@ describe.skipIf(!PYTHON_PRESENT)("e2e: local runner (python3)", () => {
             arguments: { titleSlug: "two-sum", language: "python3" }
         });
 
+        const code = 'print("ok")';
+
         // First submit attempt: no run_local_tests yet → rejected.
         const blocked = (await spawned.client.callTool({
             name: "submit_solution",
             arguments: {
                 problemSlug: "two-sum",
-                code: "def twoSum(nums, target): pass",
+                code,
                 language: "python3"
             }
         })) as ToolTextResult;
@@ -235,7 +237,7 @@ describe.skipIf(!PYTHON_PRESENT)("e2e: local runner (python3)", () => {
             arguments: {
                 titleSlug: "two-sum",
                 language: "python3",
-                code: 'print("ok")'
+                code
             }
         })) as ToolTextResult;
         const runPayload = JSON.parse(run.content[0].text);
@@ -248,7 +250,7 @@ describe.skipIf(!PYTHON_PRESENT)("e2e: local runner (python3)", () => {
             name: "submit_solution",
             arguments: {
                 problemSlug: "two-sum",
-                code: "def twoSum(nums, target): pass",
+                code,
                 language: "python3"
             }
         })) as ToolTextResult;

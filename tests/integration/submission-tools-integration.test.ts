@@ -6,6 +6,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { createLocalRunSnapshot } from "../../src/domain/local-run-snapshot.js";
 import { SessionService } from "../../src/domain/session-service.js";
 import { FileSessionStore } from "../../src/domain/session-store.js";
 import { registerSubmissionTools } from "../../src/mcp/tools/submission-tools.js";
@@ -51,6 +52,65 @@ describe("Submission Tools Integration", () => {
                 const tool = tools.find((t) => t.name === "submit_solution");
                 expect(tool).toBeDefined();
                 expect(tool?.description).toContain("solution");
+            },
+            INTEGRATION_TEST_TIMEOUT
+        );
+
+        it(
+            "blocks stale local passes for changed code",
+            async () => {
+                process.env.LEETCODE_MCP_STRICT_MODE = "1";
+                const passedCode = "def twoSum(nums, target): return [0, 1]";
+                await sessions.startOrResume({ slug: "two-sum" });
+                await sessions.recordLocalRun(
+                    "two-sum",
+                    true,
+                    createLocalRunSnapshot({
+                        code: passedCode,
+                        language: "python3"
+                    })
+                );
+
+                const result: any = await testClient.client.callTool({
+                    name: "submit_solution",
+                    arguments: {
+                        problemSlug: "two-sum",
+                        code: "def twoSum(nums, target): return []",
+                        language: "python3"
+                    }
+                });
+
+                assertions.hasToolResultStructure(result);
+                const payload = JSON.parse(result.content[0].text as string);
+                expect(payload.code).toBe(ErrorCode.LOCAL_TESTS_NOT_PASSED);
+            },
+            INTEGRATION_TEST_TIMEOUT
+        );
+
+        it(
+            "blocks stale local passes for changed language",
+            async () => {
+                process.env.LEETCODE_MCP_STRICT_MODE = "1";
+                const code = "def twoSum(nums, target): return [0, 1]";
+                await sessions.startOrResume({ slug: "two-sum" });
+                await sessions.recordLocalRun(
+                    "two-sum",
+                    true,
+                    createLocalRunSnapshot({ code, language: "python3" })
+                );
+
+                const result: any = await testClient.client.callTool({
+                    name: "submit_solution",
+                    arguments: {
+                        problemSlug: "two-sum",
+                        code,
+                        language: "python"
+                    }
+                });
+
+                assertions.hasToolResultStructure(result);
+                const payload = JSON.parse(result.content[0].text as string);
+                expect(payload.code).toBe(ErrorCode.LOCAL_TESTS_NOT_PASSED);
             },
             INTEGRATION_TEST_TIMEOUT
         );
@@ -142,14 +202,20 @@ describe("Submission Tools Integration", () => {
             async () => {
                 process.env.LEETCODE_MCP_STRICT_MODE = "1";
                 await sessions.startOrResume({ slug: "two-sum" });
-                await sessions.recordLocalRun("two-sum", true);
+                const code = "def twoSum(nums, target): pass";
+                const language = "python3";
+                await sessions.recordLocalRun(
+                    "two-sum",
+                    true,
+                    createLocalRunSnapshot({ code, language })
+                );
 
                 const result: any = await testClient.client.callTool({
                     name: "submit_solution",
                     arguments: {
                         problemSlug: "two-sum",
-                        code: "def twoSum(nums, target): pass",
-                        language: "python3"
+                        code,
+                        language
                     }
                 });
 
@@ -163,12 +229,70 @@ describe("Submission Tools Integration", () => {
         );
 
         it(
-            "permits submission when strict mode is on but no session was opened",
+            "blocks submission when code changed after passing locals",
             async () => {
                 process.env.LEETCODE_MCP_STRICT_MODE = "1";
-                // Deliberately no startOrResume — strict mode should
-                // not block ad-hoc submissions outside the tutoring
-                // flow.
+                await sessions.startOrResume({ slug: "two-sum" });
+                const language = "python3";
+                await sessions.recordLocalRun(
+                    "two-sum",
+                    true,
+                    createLocalRunSnapshot({
+                        code: "def twoSum(nums, target): pass",
+                        language
+                    })
+                );
+
+                const result: any = await testClient.client.callTool({
+                    name: "submit_solution",
+                    arguments: {
+                        problemSlug: "two-sum",
+                        code: "def twoSum(nums, target): return []",
+                        language
+                    }
+                });
+
+                assertions.hasToolResultStructure(result);
+                const payload = JSON.parse(result.content[0].text as string);
+                expect(payload.code).toBe(ErrorCode.LOCAL_TESTS_NOT_PASSED);
+            },
+            INTEGRATION_TEST_TIMEOUT
+        );
+
+        it(
+            "blocks submission when language changed after passing locals",
+            async () => {
+                process.env.LEETCODE_MCP_STRICT_MODE = "1";
+                await sessions.startOrResume({ slug: "two-sum" });
+                const code = "def twoSum(nums, target): pass";
+                await sessions.recordLocalRun(
+                    "two-sum",
+                    true,
+                    createLocalRunSnapshot({ code, language: "python3" })
+                );
+
+                const result: any = await testClient.client.callTool({
+                    name: "submit_solution",
+                    arguments: {
+                        problemSlug: "two-sum",
+                        code,
+                        language: "java"
+                    }
+                });
+
+                assertions.hasToolResultStructure(result);
+                const payload = JSON.parse(result.content[0].text as string);
+                expect(payload.code).toBe(ErrorCode.LOCAL_TESTS_NOT_PASSED);
+            },
+            INTEGRATION_TEST_TIMEOUT
+        );
+
+        it(
+            "blocks submission when strict mode is on but no session was opened",
+            async () => {
+                process.env.LEETCODE_MCP_STRICT_MODE = "1";
+                // Deliberately no startOrResume — strict mode requires
+                // a session so it can verify an exact local-test pass.
 
                 const result: any = await testClient.client.callTool({
                     name: "submit_solution",
@@ -181,7 +305,7 @@ describe("Submission Tools Integration", () => {
 
                 assertions.hasToolResultStructure(result);
                 const payload = JSON.parse(result.content[0].text as string);
-                expect(payload.code).not.toBe(ErrorCode.LOCAL_TESTS_NOT_PASSED);
+                expect(payload.code).toBe(ErrorCode.SESSION_NOT_FOUND);
             },
             INTEGRATION_TEST_TIMEOUT
         );

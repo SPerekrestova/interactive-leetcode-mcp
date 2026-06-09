@@ -48,6 +48,8 @@ export interface SessionState {
      * runner); kept here so Phase 3 sets the contract.
      */
     lastLocalRunPassed: boolean | null;
+    /** Snapshot hash of the code+language pair that last passed locally. */
+    lastLocalRunSnapshot?: string | null;
     /** Lifecycle label — see {@link SessionStatus}. */
     status: SessionStatus;
     /**

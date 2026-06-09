@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { createLocalRunSnapshot } from "../../domain/local-run-snapshot.js";
 import type { SessionService } from "../../domain/session-service.js";
 import { LeetcodeServiceInterface } from "../../leetcode/leetcode-service-interface.js";
 import {
@@ -97,7 +98,8 @@ export class RunnerToolRegistry extends ToolRegistry {
 
                     await this.sessions.recordLocalRun(
                         titleSlug,
-                        result.passed
+                        result.passed,
+                        createLocalRunSnapshot({ code, language })
                     );
 
                     return {

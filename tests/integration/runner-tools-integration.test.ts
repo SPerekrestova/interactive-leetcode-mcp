@@ -10,6 +10,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createLocalRunSnapshot } from "../../src/domain/local-run-snapshot.js";
 import { SessionService } from "../../src/domain/session-service.js";
 import { FileSessionStore } from "../../src/domain/session-store.js";
 import { registerRunnerTools } from "../../src/mcp/tools/runner-tools.js";
@@ -143,6 +144,12 @@ describe("Runner Tools Integration", () => {
 
                 const session = await sessions.requireSession("two-sum");
                 expect(session.lastLocalRunPassed).toBe(true);
+                expect(session.lastLocalRunSnapshot).toBe(
+                    createLocalRunSnapshot({
+                        code: 'print("hi")',
+                        language: "python3"
+                    })
+                );
                 expect(session.attempts).toBe(1);
             },
             INTEGRATION_TEST_TIMEOUT
@@ -177,6 +184,7 @@ describe("Runner Tools Integration", () => {
 
                 const session = await sessions.requireSession("two-sum");
                 expect(session.lastLocalRunPassed).toBe(false);
+                expect(session.lastLocalRunSnapshot).toBeNull();
                 expect(session.attempts).toBe(1);
             },
             INTEGRATION_TEST_TIMEOUT
@@ -219,6 +227,7 @@ describe("Runner Tools Integration", () => {
                 const updated = await sessions.requireSession("two-sum");
                 expect(updated.status).toBe("attempting");
                 expect(updated.lastLocalRunPassed).toBe(false);
+                expect(updated.lastLocalRunSnapshot).toBeNull();
                 expect(updated.attempts).toBe(1);
             },
             INTEGRATION_TEST_TIMEOUT
