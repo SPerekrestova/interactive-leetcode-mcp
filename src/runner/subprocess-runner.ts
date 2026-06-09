@@ -297,23 +297,37 @@ export class SubprocessRunner implements LocalRunner {
                 killTimer = setTimeout(() => child.kill("SIGKILL"), 500);
             }, options.timeoutMs);
 
-            const finalize = (exitCode: number | null): void => {
+            let settled = false;
+
+            const finalize = (
+                exitCode: number | null,
+                runnerError?: Error
+            ): void => {
+                if (settled) {
+                    return;
+                }
+                settled = true;
                 clearTimeout(timer);
                 if (killTimer) {
                     clearTimeout(killTimer);
                 }
                 const durationMs = Math.round(performance.now() - start);
-                const passed = !timedOut && exitCode === 0;
+                const passed = !timedOut && !runnerError && exitCode === 0;
+                const stderrText =
+                    clampOutput(Buffer.concat(stderr)) +
+                    (runnerError
+                        ? `\n[runner error: ${runnerError.message}]`
+                        : "");
                 resolve({
                     passed,
                     exitCode,
                     stdout: clampOutput(Buffer.concat(stdout)),
-                    stderr: clampOutput(Buffer.concat(stderr)),
-                    timedOut,
+                    stderr: stderrText,
+                    timedOut: runnerError ? false : timedOut,
                     durationMs,
                     sandbox: options.sandbox,
                     warning:
-                        options.sandbox === "none"
+                        !runnerError && options.sandbox === "none"
                             ? "No OS sandbox available on this host; ran without isolation."
                             : undefined
                 });
@@ -331,22 +345,7 @@ export class SubprocessRunner implements LocalRunner {
                     { error: error.message, cmd: options.cmd },
                     "Runner subprocess errored before exit"
                 );
-                clearTimeout(timer);
-                if (killTimer) {
-                    clearTimeout(killTimer);
-                }
-                resolve({
-                    passed: false,
-                    exitCode: null,
-                    stdout: clampOutput(Buffer.concat(stdout)),
-                    stderr:
-                        clampOutput(Buffer.concat(stderr)) +
-                        `\n[runner error: ${error.message}]`,
-                    timedOut: false,
-                    durationMs: Math.round(performance.now() - start),
-                    sandbox: options.sandbox,
-                    warning: undefined
-                });
+                finalize(null, error);
             });
         });
     }

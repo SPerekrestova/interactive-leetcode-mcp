@@ -152,8 +152,8 @@ export class SessionService {
     /**
      * Updates the session after a `run_local_tests` invocation.
      * Increments `attempts`, sets `lastLocalRunPassed`, and bumps
-     * `status` to "attempting" on the first run (so subsequent
-     * resets-then-runs keep the lifecycle accurate).
+     * `status` to "attempting" on active failed runs so the lifecycle
+     * remains aligned with the latest local result.
      */
     async recordLocalRun(slug: string, passed: boolean): Promise<SessionState> {
         const session = await this.requireSession(slug);
@@ -162,7 +162,10 @@ export class SessionService {
             attempts: session.attempts + 1,
             lastLocalRunPassed: passed,
             status:
-                session.status === "started" ? "attempting" : session.status,
+                session.status === "started" ||
+                (session.status === "solved" && !passed)
+                    ? "attempting"
+                    : session.status,
             updatedAt: new Date().toISOString()
         };
         await this.store.save(next);

@@ -35,6 +35,13 @@ interface DetectedSandbox {
 
 let cached: DetectedSandbox | undefined;
 
+function escapeSandboxProfileString(value: string): string {
+    if (/[\r\n]/.test(value)) {
+        throw new Error("sandbox-exec profile strings cannot contain newlines");
+    }
+    return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
 /**
  * Returns whether `<bin> --version` succeeds. Uses the no-shell
  * `execFile` so the probe never re-interprets `bin`/`args` through
@@ -153,12 +160,13 @@ export async function wrapWithSandbox(
     if (detected.kind === "sandbox-exec") {
         // Minimal sandbox-exec profile — deny by default, allow process
         // primitives + reads everywhere + writes only under cwdAllowed.
+        const writableSubpath = escapeSandboxProfileString(cwdAllowed);
         const profile = `(version 1)
 (deny default)
 (allow process-fork)
 (allow process-exec)
 (allow file-read*)
-(allow file-write* (subpath "${cwdAllowed.replace(/"/g, '\\"')}"))
+(allow file-write* (subpath "${writableSubpath}"))
 (allow file-write* (regex #"^/dev/null$"))
 (allow file-write* (regex #"^/dev/dtracehelper$"))
 (allow sysctl-read)
@@ -178,4 +186,12 @@ export async function wrapWithSandbox(
 /** Test helper — clears the per-process cache so unit tests can re-probe. */
 export function __resetSandboxCacheForTest(): void {
     cached = undefined;
+}
+
+/** Test helper — seeds the per-process sandbox cache. */
+export function __setSandboxCacheForTest(next: {
+    kind: SandboxKind;
+    path?: string;
+}): void {
+    cached = next;
 }

@@ -58,6 +58,17 @@ describe("SessionService — Phase 4 additions", () => {
             expect(after2.status).toBe("attempting");
         });
 
+        it("demotes solved sessions after a failing local run", async () => {
+            const store = new FileSessionStore({ dir });
+            const session = await service.startOrResume({ slug: "two-sum" });
+            await store.save({ ...session, status: "solved" });
+
+            const after = await service.recordLocalRun("two-sum", false);
+
+            expect(after.status).toBe("attempting");
+            expect(after.lastLocalRunPassed).toBe(false);
+        });
+
         it("persists across service instances", async () => {
             await service.startOrResume({ slug: "two-sum" });
             await service.recordLocalRun("two-sum", true);
