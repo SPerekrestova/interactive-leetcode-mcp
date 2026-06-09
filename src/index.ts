@@ -6,19 +6,25 @@ import minimist from "minimist";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { restoreCredentials } from "./auth/auth-flow.js";
+import { SessionService } from "./domain/session-service.js";
 import { LeetCodeGlobalService } from "./leetcode/leetcode-global-service.js";
 import { LeetcodeServiceInterface } from "./leetcode/leetcode-service-interface.js";
 import { registerAuthPrompts } from "./mcp/prompts/auth-prompts.js";
 import { registerLearningPrompts } from "./mcp/prompts/learning-prompts.js";
 import { registerProblemResources } from "./mcp/resources/problem-resources.js";
 import { registerSolutionResources } from "./mcp/resources/solution-resources.js";
+import { SERVER_INSTRUCTIONS } from "./mcp/server-instructions.js";
 import { registerAuthTools } from "./mcp/tools/auth-tools.js";
 import { registerContestTools } from "./mcp/tools/contest-tools.js";
 import { registerOnboardingTools } from "./mcp/tools/onboarding-tools.js";
 import { registerProblemTools } from "./mcp/tools/problem-tools.js";
+import { registerRunnerTools } from "./mcp/tools/runner-tools.js";
+import { registerSessionTools } from "./mcp/tools/session-tools.js";
 import { registerSolutionTools } from "./mcp/tools/solution-tools.js";
 import { registerSubmissionTools } from "./mcp/tools/submission-tools.js";
 import { registerUserTools } from "./mcp/tools/user-tools.js";
+import { SubprocessRunner } from "./runner/subprocess-runner.js";
 import logger from "./utils/logger.js";
 
 /**
@@ -110,16 +116,41 @@ async function main() {
 
     const packageJSON = getPackageJson();
 
-    const server = new McpServer({
-        name: "LeetCode MCP Server",
-        version: packageJSON.version
-    });
+    const server = new McpServer(
+        {
+            name: "LeetCode MCP Server",
+            version: packageJSON.version
+        },
+        {
+            // Delivered to clients at handshake. Replaces the prompt-based
+            // "remember to invoke X first" dance with rules the agent
+            // receives once and keeps for the session.
+            instructions: SERVER_INSTRUCTIONS
+        }
+    );
 
     const credential: Credential = new Credential();
     const leetcodeService: LeetcodeServiceInterface = new LeetCodeGlobalService(
         new LeetCode(credential),
         credential
     );
+
+    // Re-hydrate saved credentials from disk so authenticated tools work
+    // immediately after a server restart without forcing the user to paste
+    // their cookies again.
+    await restoreCredentials(leetcodeService);
+
+    // Pedagogy state machine: per-problem session JSON under
+    // ~/.leetcode-mcp/sessions/<slug>.json. The session service is the
+    // single owner of hint progression and the gate that
+    // list_problem_solutions / get_problem_solution check before
+    // returning content.
+    const sessions = new SessionService();
+
+    // Local subprocess runner: probes python3 / go / java on first use,
+    // wraps with bwrap / firejail / sandbox-exec where available, and
+    // backs the `run_local_tests` tool. Phase 4a ships python3 only.
+    const runner = new SubprocessRunner();
 
     // Register MCP prompts for learning mode and workspace guidance
     registerLearningPrompts(server, leetcodeService);
@@ -132,9 +163,11 @@ async function main() {
     registerProblemTools(server, leetcodeService);
     registerUserTools(server, leetcodeService);
     registerContestTools(server, leetcodeService);
-    registerSolutionTools(server, leetcodeService);
+    registerSessionTools(server, leetcodeService, sessions);
+    registerSolutionTools(server, leetcodeService, sessions);
+    registerRunnerTools(server, leetcodeService, sessions, runner);
     registerAuthTools(server, leetcodeService);
-    registerSubmissionTools(server, leetcodeService);
+    registerSubmissionTools(server, leetcodeService, sessions);
 
     registerProblemResources(server, leetcodeService);
     registerSolutionResources(server, leetcodeService);

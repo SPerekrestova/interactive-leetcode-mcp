@@ -14,8 +14,8 @@ describe("LeetCode Problem Services", () => {
 
                 expect(result).toBeDefined();
                 expect(result.question).toBeDefined();
-                expect(result.question.title).toBeDefined();
-                expect(result.question.questionId).toBeDefined();
+                expect(result.question?.title).toBeDefined();
+                expect(result.question?.questionId).toBeDefined();
             }, 30000);
         });
 
