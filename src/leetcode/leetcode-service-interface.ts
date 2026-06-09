@@ -58,9 +58,6 @@ export interface LeetcodeServiceInterface {
      * @param options.offset - Number of submissions to skip (required for pagination)
      * @param options.limit - Maximum number of submissions to return (required)
      * @param options.questionSlug - Optional filter for problem slug/identifier
-     * @param options.lastKey - Optional pagination token for subsequent requests
-     * @param options.lang - Optional filter for programming language
-     * @param options.status - Optional filter for submission status
      * @returns Promise resolving to the filtered submission data
      * @throws LeetCodeError(AUTH_REQUIRED) if not authenticated
      */
@@ -68,9 +65,6 @@ export interface LeetcodeServiceInterface {
         offset: number;
         limit: number;
         questionSlug?: string;
-        lastKey?: string;
-        lang?: string;
-        status?: string;
     }): Promise<UserAllSubmissions>;
 
     /**

@@ -183,6 +183,48 @@ describe("Runner Tools Integration", () => {
         );
 
         it(
+            "demotes solved sessions after a failing run",
+            async () => {
+                const store = new FileSessionStore({ dir: sessionDir });
+                const session = await sessions.startOrResume({
+                    slug: "two-sum"
+                });
+                await store.save({
+                    ...session,
+                    status: "solved",
+                    lastLocalRunPassed: true
+                });
+                const failing = createFakeRunner({
+                    nextResult: { ...HAPPY_RESULT, passed: false, exitCode: 1 }
+                });
+                await testClient.cleanup();
+                testClient = await createTestClient({}, (server) => {
+                    registerRunnerTools(
+                        server,
+                        mockService as any,
+                        sessions,
+                        failing
+                    );
+                });
+
+                await testClient.client.callTool({
+                    name: "run_local_tests",
+                    arguments: {
+                        titleSlug: "two-sum",
+                        language: "python3",
+                        code: "raise SystemExit(1)"
+                    }
+                });
+
+                const updated = await sessions.requireSession("two-sum");
+                expect(updated.status).toBe("attempting");
+                expect(updated.lastLocalRunPassed).toBe(false);
+                expect(updated.attempts).toBe(1);
+            },
+            INTEGRATION_TEST_TIMEOUT
+        );
+
+        it(
             "surfaces RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE thrown from the runner",
             async () => {
                 await sessions.startOrResume({ slug: "two-sum" });

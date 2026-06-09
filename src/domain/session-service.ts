@@ -24,9 +24,34 @@ export interface StartProblemInput {
 }
 
 export class SessionService {
+    private readonly mutationQueues = new Map<string, Promise<unknown>>();
+
     constructor(
         private readonly store: SessionStore = new FileSessionStore()
     ) {}
+
+    private async withSessionMutation<T>(
+        slug: string,
+        operation: () => Promise<T>
+    ): Promise<T> {
+        const previous = this.mutationQueues.get(slug);
+        const current = (async () => {
+            try {
+                await previous;
+            } catch {
+                // Prior mutation failure should not permanently poison the queue.
+            }
+            return operation();
+        })();
+        this.mutationQueues.set(slug, current);
+        try {
+            return await current;
+        } finally {
+            if (this.mutationQueues.get(slug) === current) {
+                this.mutationQueues.delete(slug);
+            }
+        }
+    }
 
     /**
      * Returns the existing session for a slug, or creates a fresh
@@ -36,34 +61,36 @@ export class SessionService {
      * `start_problem`).
      */
     async startOrResume(input: StartProblemInput): Promise<SessionState> {
-        const existing = await this.store.load(input.slug);
-        if (existing) {
-            // Update language only if the caller specified one and we
-            // didn't have one before — never silently overwrite.
-            if (input.language && !existing.language) {
-                const updated: SessionState = {
-                    ...existing,
-                    language: input.language,
-                    updatedAt: new Date().toISOString()
-                };
-                await this.store.save(updated);
-                return updated;
+        return this.withSessionMutation(input.slug, async () => {
+            const existing = await this.store.load(input.slug);
+            if (existing) {
+                // Update language only if the caller specified one and we
+                // didn't have one before — never silently overwrite.
+                if (input.language && !existing.language) {
+                    const updated: SessionState = {
+                        ...existing,
+                        language: input.language,
+                        updatedAt: new Date().toISOString()
+                    };
+                    await this.store.save(updated);
+                    return updated;
+                }
+                return existing;
             }
-            return existing;
-        }
-        const now = new Date().toISOString();
-        const fresh: SessionState = {
-            slug: input.slug,
-            language: input.language,
-            hintLevel: 0,
-            attempts: 0,
-            lastLocalRunPassed: null,
-            status: "started",
-            createdAt: now,
-            updatedAt: now
-        };
-        await this.store.save(fresh);
-        return fresh;
+            const now = new Date().toISOString();
+            const fresh: SessionState = {
+                slug: input.slug,
+                language: input.language,
+                hintLevel: 0,
+                attempts: 0,
+                lastLocalRunPassed: null,
+                status: "started",
+                createdAt: now,
+                updatedAt: now
+            };
+            await this.store.save(fresh);
+            return fresh;
+        });
     }
 
     /** Returns the session, or `null` if `start_problem` was never called. */
@@ -82,31 +109,35 @@ export class SessionService {
         slug: string,
         problem: SimplifiedProblem
     ): Promise<{ session: SessionState; hint: string; level: HintLevel }> {
-        const session = await this.requireSession(slug);
-        const next = advanceHint(session);
-        await this.store.save(next);
-        const level = next.hintLevel;
-        if (level === 0) {
-            // Unreachable — advanceHint never returns 0 — but the type
-            // narrows from HintLevel to 1..4 only with this guard.
-            throw new LeetCodeError(
-                ErrorCode.UPSTREAM_ERROR,
-                "Hint level transition produced level 0"
-            );
-        }
-        return {
-            session: next,
-            level,
-            hint: generateHint(problem, level)
-        };
+        return this.withSessionMutation(slug, async () => {
+            const session = await this.requireSession(slug);
+            const next = advanceHint(session);
+            await this.store.save(next);
+            const level = next.hintLevel;
+            if (level === 0) {
+                // Unreachable — advanceHint never returns 0 — but the type
+                // narrows from HintLevel to 1..4 only with this guard.
+                throw new LeetCodeError(
+                    ErrorCode.UPSTREAM_ERROR,
+                    "Hint level transition produced level 0"
+                );
+            }
+            return {
+                session: next,
+                level,
+                hint: generateHint(problem, level)
+            };
+        });
     }
 
     /** Resets the session back to the level-0 initial state. */
     async reset(slug: string): Promise<SessionState> {
-        const session = await this.requireSession(slug);
-        const next = resetSession(session);
-        await this.store.save(next);
-        return next;
+        return this.withSessionMutation(slug, async () => {
+            const session = await this.requireSession(slug);
+            const next = resetSession(session);
+            await this.store.save(next);
+            return next;
+        });
     }
 
     /**
@@ -156,19 +187,21 @@ export class SessionService {
      * remains aligned with the latest local result.
      */
     async recordLocalRun(slug: string, passed: boolean): Promise<SessionState> {
-        const session = await this.requireSession(slug);
-        const next: SessionState = {
-            ...session,
-            attempts: session.attempts + 1,
-            lastLocalRunPassed: passed,
-            status:
-                session.status === "started" ||
-                (session.status === "solved" && !passed)
-                    ? "attempting"
-                    : session.status,
-            updatedAt: new Date().toISOString()
-        };
-        await this.store.save(next);
-        return next;
+        return this.withSessionMutation(slug, async () => {
+            const session = await this.requireSession(slug);
+            const next: SessionState = {
+                ...session,
+                attempts: session.attempts + 1,
+                lastLocalRunPassed: passed,
+                status:
+                    session.status === "started" ||
+                    (session.status === "solved" && !passed)
+                        ? "attempting"
+                        : session.status,
+                updatedAt: new Date().toISOString()
+            };
+            await this.store.save(next);
+            return next;
+        });
     }
 }

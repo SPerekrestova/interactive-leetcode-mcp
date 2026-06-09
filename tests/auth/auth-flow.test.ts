@@ -78,10 +78,7 @@ describe("restoreCredentials", () => {
         expect(service.updateCredentials).not.toHaveBeenCalled();
     });
 
-    it("propagates exceptions thrown by validateCredentials", async () => {
-        // The interface contract is `Promise<string | null>`; `restoreCredentials`
-        // does not catch. If a service impl violates that contract by throwing,
-        // surface the error rather than silently swallowing.
+    it("returns invalid/expired when validateCredentials throws", async () => {
         const service = makeService({
             validateCredentials: vi.fn().mockRejectedValue(new Error("boom"))
         });
@@ -93,9 +90,10 @@ describe("restoreCredentials", () => {
             })
         });
 
-        await expect(restoreCredentials(service, storage)).rejects.toThrow(
-            "boom"
-        );
+        await expect(restoreCredentials(service, storage)).resolves.toEqual({
+            status: "invalid",
+            reason: "expired"
+        });
         expect(service.updateCredentials).not.toHaveBeenCalled();
     });
 

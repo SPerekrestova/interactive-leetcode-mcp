@@ -111,9 +111,6 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
         offset: number;
         limit: number;
         questionSlug?: string;
-        lastKey?: string;
-        lang?: string;
-        status?: string;
     }): Promise<UserAllSubmissions> {
         if (!this.isAuthenticated()) {
             throw new LeetCodeError(
@@ -184,7 +181,10 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
                 totalSubmissionNum: matchedUser.submitStats?.totalSubmissionNum
             };
         }
-        return profile as unknown as UserProfile;
+        throw new LeetCodeError(
+            ErrorCode.UPSTREAM_PAYLOAD_INVALID,
+            `LeetCode profile for "${username}" did not include a matched user`
+        );
     }
 
     async fetchUserContestRanking(
@@ -362,9 +362,9 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
     ): Promise<SolutionArticleList> {
         const variables = {
             questionSlug,
-            first: options?.limit || 5,
-            skip: options?.skip || 0,
-            orderBy: options?.orderBy || "HOT",
+            first: options?.limit ?? 5,
+            skip: options?.skip ?? 0,
+            orderBy: options?.orderBy ?? "HOT",
             userInput: options?.userInput,
             tagSlugs: options?.tagSlugs ?? []
         };
@@ -385,7 +385,7 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
         return {
             totalNum: ugcArticleSolutionArticles?.totalNum || 0,
             hasNextPage:
-                ugcArticleSolutionArticles?.pageInfo?.hasNextPage || false,
+                ugcArticleSolutionArticles?.pageInfo?.hasNextPage ?? false,
             articles:
                 ugcArticleSolutionArticles?.edges
                     ?.map((edge: { node?: SolutionArticleSummary | null }) => {

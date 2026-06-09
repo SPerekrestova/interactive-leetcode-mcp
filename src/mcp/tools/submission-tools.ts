@@ -73,15 +73,16 @@ export class SubmissionToolRegistry extends ToolRegistry {
             },
             async ({ problemSlug, code, language }) => {
                 try {
-                    if (this.isStrictMode() && this.sessions) {
-                        // The strict gate only fires when the user has
-                        // actually opened a session for this slug. If
-                        // they never called `start_problem`, the
-                        // pre-strict-mode behaviour is preserved (so
-                        // strict mode is non-disruptive for ad-hoc
-                        // calls outside the tutoring flow).
-                        const session = await this.sessions.get(problemSlug);
-                        if (session && session.lastLocalRunPassed !== true) {
+                    if (this.isStrictMode()) {
+                        if (!this.sessions) {
+                            throw new LeetCodeError(
+                                ErrorCode.LOCAL_TESTS_NOT_PASSED,
+                                "Strict mode is enabled but no session service is available to verify local test results."
+                            );
+                        }
+                        const session =
+                            await this.sessions.requireSession(problemSlug);
+                        if (session.lastLocalRunPassed !== true) {
                             throw new LeetCodeError(
                                 ErrorCode.LOCAL_TESTS_NOT_PASSED,
                                 "Strict mode is enabled and the most recent run_local_tests for this problem did not pass. Run it again and submit only when locals are green."

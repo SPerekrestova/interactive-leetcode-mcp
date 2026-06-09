@@ -80,6 +80,19 @@ describe("SessionService — Phase 4 additions", () => {
             expect(session.lastLocalRunPassed).toBe(true);
         });
 
+        it("serializes concurrent local-run updates", async () => {
+            await service.startOrResume({ slug: "two-sum" });
+
+            await Promise.all(
+                Array.from({ length: 10 }, (_, index) =>
+                    service.recordLocalRun("two-sum", index % 2 === 0)
+                )
+            );
+
+            const session = await service.requireSession("two-sum");
+            expect(session.attempts).toBe(10);
+        });
+
         it("throws SESSION_NOT_FOUND when no session exists", async () => {
             await expect(async () => {
                 await service.recordLocalRun("never-opened", true);

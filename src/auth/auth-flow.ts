@@ -29,11 +29,20 @@ export async function restoreCredentials(
     service: LeetcodeServiceInterface,
     storage: CredentialsStorage = defaultStorage
 ): Promise<RestoreOutcome> {
-    if (!(await storage.exists())) {
-        return { status: "no_credentials" };
+    let credentials: Awaited<ReturnType<CredentialsStorage["load"]>>;
+    try {
+        if (!(await storage.exists())) {
+            return { status: "no_credentials" };
+        }
+        credentials = await storage.load();
+    } catch (error) {
+        logger.warn(
+            "Saved credentials could not be loaded; ignoring: %s",
+            error instanceof Error ? error.message : String(error)
+        );
+        return { status: "invalid", reason: "load_failed" };
     }
 
-    const credentials = await storage.load();
     if (!credentials) {
         logger.warn(
             "Saved credentials file exists but could not be parsed; ignoring."
@@ -41,11 +50,20 @@ export async function restoreCredentials(
         return { status: "invalid", reason: "load_failed" };
     }
 
-    const username = await applyValidatedCredentials(
-        service,
-        credentials.csrftoken,
-        credentials.LEETCODE_SESSION
-    );
+    let username: string | null;
+    try {
+        username = await applyValidatedCredentials(
+            service,
+            credentials.csrftoken,
+            credentials.LEETCODE_SESSION
+        );
+    } catch (error) {
+        logger.warn(
+            "Saved credentials validation failed; user will need to re-authenticate: %s",
+            error instanceof Error ? error.message : String(error)
+        );
+        return { status: "invalid", reason: "expired" };
+    }
 
     if (!username) {
         logger.info(

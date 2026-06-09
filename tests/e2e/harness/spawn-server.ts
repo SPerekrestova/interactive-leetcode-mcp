@@ -88,17 +88,21 @@ export async function spawnServer(
     }
 
     const env: Record<string, string> = {
+        ...(options.env ?? {}),
         // Pass through the bare minimum from the parent so node can find
         // node_modules and the test runner's cwd matches the repo root.
-        PATH: process.env.PATH ?? "",
+        PATH: options.env?.PATH ?? process.env.PATH ?? "",
         HOME: home,
         // `pathToFileURL` percent-encodes path segments so the preload
         // import works even when the harness path contains spaces or
         // other URL-reserved characters (common on macOS user dirs).
-        NODE_OPTIONS: `--import ${pathToFileURL(PRELOAD).href}`,
-        ...(fixturePath ? { E2E_FIXTURE_PATH: fixturePath } : {}),
-        ...(options.env ?? {})
+        NODE_OPTIONS: `--import ${pathToFileURL(PRELOAD).href}`
     };
+    if (fixturePath) {
+        env.E2E_FIXTURE_PATH = fixturePath;
+    } else {
+        delete env.E2E_FIXTURE_PATH;
+    }
 
     const transport = new StdioClientTransport({
         command: process.execPath,
@@ -114,8 +118,6 @@ export async function spawnServer(
         name: "leetcode-mcp-e2e",
         version: "0.0.0"
     });
-    await client.connect(transport);
-
     const cleanup = async () => {
         try {
             await client.close();
@@ -129,6 +131,13 @@ export async function spawnServer(
             await rm(fixtureDir, { recursive: true, force: true });
         }
     };
+
+    try {
+        await client.connect(transport);
+    } catch (error) {
+        await cleanup();
+        throw error;
+    }
 
     return { client, home, cleanup };
 }

@@ -10,24 +10,24 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { spawnServer, type SpawnedServer } from "./harness/spawn-server.js";
 
 describe("e2e: server lifecycle", () => {
-    let spawned: SpawnedServer;
+    let spawned: SpawnedServer | undefined;
 
     beforeAll(async () => {
         spawned = await spawnServer();
     });
 
     afterAll(async () => {
-        await spawned.cleanup();
+        await spawned?.cleanup();
     });
 
     it("advertises a non-empty server name and version after handshake", () => {
-        const info = spawned.client.getServerVersion();
+        const info = spawned?.client.getServerVersion();
         expect(info?.name).toBeTruthy();
         expect(info?.version).toBeTruthy();
     });
 
     it("registers all expected tools", async () => {
-        const { tools } = await spawned.client.listTools();
+        const { tools } = await spawned!.client.listTools();
         const names = tools.map((t) => t.name).sort();
 
         // The exact set must stay stable — adding a tool is intentional and
@@ -67,7 +67,7 @@ describe("e2e: server lifecycle", () => {
     });
 
     it("registers MCP prompts", async () => {
-        const { prompts } = await spawned.client.listPrompts();
+        const { prompts } = await spawned!.client.listPrompts();
         expect(prompts.length).toBeGreaterThan(0);
         const names = prompts.map((p) => p.name);
         expect(names).toContain("leetcode_authentication_guide");
@@ -75,7 +75,7 @@ describe("e2e: server lifecycle", () => {
 
     it("exposes resource templates for problems and solutions", async () => {
         const { resourceTemplates } =
-            await spawned.client.listResourceTemplates();
+            await spawned!.client.listResourceTemplates();
         expect(resourceTemplates.length).toBeGreaterThan(0);
         const uriTemplates = resourceTemplates.map((r) => r.uriTemplate);
         expect(uriTemplates.some((u) => u.startsWith("problem://"))).toBe(true);

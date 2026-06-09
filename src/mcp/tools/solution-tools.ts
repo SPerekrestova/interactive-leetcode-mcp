@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { SessionService } from "../../domain/session-service.js";
 import { LeetcodeServiceInterface } from "../../leetcode/leetcode-service-interface.js";
+import { ErrorCode, LeetCodeError } from "../../types/index.js";
 import { errorEnvelope } from "./session-tools.js";
 import { ToolRegistry } from "./tool-registry.js";
 
@@ -22,6 +23,38 @@ export class SolutionToolRegistry extends ToolRegistry {
         super(server, leetcodeService);
     }
 
+    private async assertTopicBelongsToSlug(
+        topicId: string,
+        titleSlug: string
+    ): Promise<void> {
+        const wantedTopicId = String(topicId);
+        const pageSize = 50;
+        let skip = 0;
+        let hasNextPage = true;
+
+        while (hasNextPage && skip < 500) {
+            const page =
+                await this.leetcodeService.fetchQuestionSolutionArticles(
+                    titleSlug,
+                    { limit: pageSize, skip }
+                );
+            if (
+                page.articles.some(
+                    (article) => String(article.topicId) === wantedTopicId
+                )
+            ) {
+                return;
+            }
+            hasNextPage = page.hasNextPage;
+            skip += pageSize;
+        }
+
+        throw new LeetCodeError(
+            ErrorCode.SOLUTION_NOT_FOUND,
+            `Solution topicId ${topicId} was not found for problem ${titleSlug}`
+        );
+    }
+
     protected registerPublic(): void {
         this.server.registerTool(
             "list_problem_solutions",
@@ -36,6 +69,9 @@ export class SolutionToolRegistry extends ToolRegistry {
                         ),
                     limit: z
                         .number()
+                        .int()
+                        .min(1)
+                        .max(50)
                         .optional()
                         .default(10)
                         .describe(
@@ -43,7 +79,10 @@ export class SolutionToolRegistry extends ToolRegistry {
                         ),
                     skip: z
                         .number()
+                        .int()
+                        .min(0)
                         .optional()
+                        .default(0)
                         .describe(
                             "Number of solutions to skip before collecting results. Used with `limit` for pagination."
                         ),
@@ -122,6 +161,7 @@ export class SolutionToolRegistry extends ToolRegistry {
             async ({ topicId, titleSlug }) => {
                 try {
                     await this.sessions.assertSolutionUnlocked(titleSlug);
+                    await this.assertTopicBelongsToSlug(topicId, titleSlug);
                     const data =
                         await this.leetcodeService.fetchSolutionArticleDetail(
                             topicId

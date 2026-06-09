@@ -20,6 +20,7 @@
  */
 import nock from "nock";
 import { readFileSync } from "node:fs";
+import process from "node:process";
 
 nock.disableNetConnect();
 

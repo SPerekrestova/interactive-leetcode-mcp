@@ -125,16 +125,20 @@ export function createMockLeetCodeService(): LeetcodeServiceInterface {
         }),
 
         // Solution methods
-        fetchQuestionSolutionArticles: vi.fn().mockResolvedValue([
-            {
-                id: "1",
-                title: "Two Sum - Solution",
-                slug: "two-sum-solution",
-                topicId: 12345,
-                authorUsername: "leetcode",
-                voteCount: 1000
-            }
-        ]),
+        fetchQuestionSolutionArticles: vi.fn().mockResolvedValue({
+            totalNum: 1,
+            hasNextPage: false,
+            articles: [
+                {
+                    id: "1",
+                    title: "Two Sum - Solution",
+                    slug: "two-sum-solution",
+                    topicId: 12345,
+                    authorUsername: "leetcode",
+                    voteCount: 1000
+                }
+            ]
+        }),
 
         fetchSolutionArticleDetail: vi.fn().mockResolvedValue({
             topicId: 12345,

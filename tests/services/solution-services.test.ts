@@ -71,12 +71,7 @@ describe("LeetCode Solution Services", () => {
                 }
 
                 const topicId = solutionsResult.articles[0]?.topicId;
-                if (topicId === undefined) {
-                    logger.info(
-                        "First article had no topicId, skipping detail fetch test"
-                    );
-                    return;
-                }
+                expect(topicId).toBeDefined();
                 logger.info(`Using topicId: ${topicId} for detail fetch`);
 
                 const result = await service.fetchSolutionArticleDetail(

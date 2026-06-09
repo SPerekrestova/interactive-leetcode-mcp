@@ -19,7 +19,11 @@
  *   - stdout/stderr captured with a 1 MB ceiling; runaway output gets
  *     truncated with a marker rather than blowing memory
  */
-import { execFile as execFileCb, spawn } from "node:child_process";
+import {
+    execFile as execFileCb,
+    spawn,
+    type ChildProcess
+} from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -159,6 +163,23 @@ function clampOutput(buf: Buffer): string {
     );
 }
 
+function killProcessTree(child: ChildProcess, signal: NodeJS.Signals): void {
+    if (child.pid === undefined) {
+        return;
+    }
+    if (process.platform === "win32") {
+        child.kill(signal);
+        return;
+    }
+    try {
+        process.kill(-child.pid, signal);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ESRCH") {
+            child.kill(signal);
+        }
+    }
+}
+
 export class SubprocessRunner implements LocalRunner {
     async capabilities(): Promise<RunnerCapabilities> {
         const languages = await Promise.all(
@@ -250,6 +271,7 @@ export class SubprocessRunner implements LocalRunner {
                     HOME: options.cwd,
                     LANG: process.env.LANG ?? "C.UTF-8"
                 },
+                detached: process.platform !== "win32",
                 stdio: ["ignore", "pipe", "pipe"]
             });
 
@@ -293,8 +315,11 @@ export class SubprocessRunner implements LocalRunner {
                 timedOut = true;
                 // SIGTERM first; if the child ignores it, hard SIGKILL
                 // 500 ms later. Belt + braces for runaway loops.
-                child.kill("SIGTERM");
-                killTimer = setTimeout(() => child.kill("SIGKILL"), 500);
+                killProcessTree(child, "SIGTERM");
+                killTimer = setTimeout(
+                    () => killProcessTree(child, "SIGKILL"),
+                    500
+                );
             }, options.timeoutMs);
 
             let settled = false;

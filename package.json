@@ -18,7 +18,7 @@
         "practice"
     ],
     "scripts": {
-        "test": "vitest run --exclude 'tests/e2e/**' | pino-pretty",
+        "test": "bash -o pipefail -c 'vitest run --exclude \"tests/e2e/**\" | pino-pretty'",
         "test:unit": "vitest run tests/mcp tests/utils tests/services tests/tools",
         "test:integration": "vitest run tests/integration",
         "test:e2e": "vitest run --config vitest.e2e.config.ts",

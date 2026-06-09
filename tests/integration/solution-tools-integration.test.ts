@@ -137,7 +137,7 @@ describe("Solution Tools Integration", () => {
                     mockService.fetchQuestionSolutionArticles
                 ).toHaveBeenCalledWith("two-sum", {
                     limit: 5,
-                    skip: undefined,
+                    skip: 0,
                     orderBy: undefined,
                     userInput: undefined,
                     tagSlugs: []
@@ -165,7 +165,7 @@ describe("Solution Tools Integration", () => {
                     mockService.fetchQuestionSolutionArticles
                 ).toHaveBeenCalledWith("two-sum", {
                     limit: 10,
-                    skip: undefined,
+                    skip: 0,
                     orderBy: "MOST_VOTES",
                     userInput: undefined,
                     tagSlugs: ["python", "dynamic-programming"]
@@ -224,6 +224,26 @@ describe("Solution Tools Integration", () => {
                 expect(
                     mockService.fetchSolutionArticleDetail
                 ).toHaveBeenCalledWith("12345");
+            },
+            INTEGRATION_TEST_TIMEOUT
+        );
+
+        it(
+            "rejects when topicId is not listed for titleSlug",
+            async () => {
+                await seedSession("two-sum");
+
+                const result: any = await testClient.client.callTool({
+                    name: "get_problem_solution",
+                    arguments: { topicId: "99999", titleSlug: "two-sum" }
+                });
+
+                assertions.hasToolResultStructure(result);
+                const payload = JSON.parse(result.content[0].text);
+                expect(payload.code).toBe(ErrorCode.SOLUTION_NOT_FOUND);
+                expect(
+                    mockService.fetchSolutionArticleDetail
+                ).not.toHaveBeenCalled();
             },
             INTEGRATION_TEST_TIMEOUT
         );
