@@ -124,6 +124,7 @@ describe("SubprocessRunner", () => {
                 const result = await runner.run({
                     titleSlug: "two-sum",
                     language: "go",
+                    timeoutMs: 20_000,
                     code: [
                         "package main",
                         'import "fmt"',
