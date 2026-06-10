@@ -1,7 +1,7 @@
 /**
  * Plain-subprocess `LocalRunner` implementation.
  *
- * Per-language registry (currently `python3` and `go`) describes how to:
+ * Per-language registry (currently `python3`, `go`, and `java`) describes how to:
  *   - probe whether the runtime is available on PATH
  *   - spawn the runtime against a source file written to the run's
  *     temp dir
@@ -51,11 +51,13 @@ const execFile = promisify(execFileCb);
 const MAX_OUTPUT_BYTES = 1_000_000; // 1 MB per stream
 const DEFAULT_TIMEOUT_MS = 5_000;
 const GO_DEFAULT_TIMEOUT_MS = 20_000;
+const JAVA_DEFAULT_TIMEOUT_MS = 20_000;
 const TRUNCATION_MARKER = "\n[...output truncated at 1 MB...]";
 
 interface LanguageSpec {
     /** File extension (without dot) used for the temp source file. */
     extension: string;
+    sourceFileName?: string;
     /** `[binary, args]` to probe — exit code 0 means available. */
     probe: { cmd: string; args: string[] };
     defaultTimeoutMs?: number;
@@ -128,18 +130,15 @@ const LANGUAGES: Record<RunnerLanguage, LanguageSpec> = {
             args: ["run", sourcePath]
         })
     },
-    // Phase 4c stub — present in the registry so the type system
-    // requires it stays in sync with `RunnerLanguage`. The runner
-    // refuses to use it until we actually wire the harness.
     java: {
         extension: "java",
         probe: { cmd: "java", args: ["-version"] },
-        buildArgs: () => {
-            throw new LeetCodeError(
-                ErrorCode.RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE,
-                "Java runner ships in Phase 4c"
-            );
-        }
+        sourceFileName: "Solution.java",
+        defaultTimeoutMs: JAVA_DEFAULT_TIMEOUT_MS,
+        buildArgs: (sourcePath) => ({
+            cmd: "java",
+            args: [sourcePath]
+        })
     }
 };
 
@@ -274,7 +273,10 @@ export class SubprocessRunner implements LocalRunner {
             writablePaths: []
         };
         const workDir = await mkdtemp(join(tmpdir(), "leetcode-mcp-run-"));
-        const sourcePath = join(workDir, `solution.${spec.extension}`);
+        const sourcePath = join(
+            workDir,
+            spec.sourceFileName ?? `solution.${spec.extension}`
+        );
 
         try {
             await writeFile(sourcePath, input.code, "utf-8");
