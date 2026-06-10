@@ -82,7 +82,7 @@ let goRuntimePathsPromise: Promise<GoRuntimePaths> | undefined;
 
 async function getGoRuntimePaths(): Promise<GoRuntimePaths> {
     if (!goRuntimePathsPromise) {
-        goRuntimePathsPromise = (async () => {
+        const attempt = (async () => {
             const root = await mkdtemp(join(tmpdir(), "leetcode-mcp-go-"));
             const buildCache = join(root, "go-build");
             const moduleCache = join(root, "gomod");
@@ -90,6 +90,10 @@ async function getGoRuntimePaths(): Promise<GoRuntimePaths> {
             await mkdir(moduleCache, { recursive: true });
             return { root, buildCache, moduleCache };
         })();
+        goRuntimePathsPromise = attempt.catch((error) => {
+            goRuntimePathsPromise = undefined;
+            throw error;
+        });
     }
     return goRuntimePathsPromise;
 }
