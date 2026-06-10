@@ -11,10 +11,9 @@
 /**
  * Languages the local runner knows how to execute.
  *
- * Phase 4a ships `python3` only; Phase 4b/4c add `go` and `java`. Other
- * LeetCode languages remain valid for `submit_solution` but
- * `run_local_tests` will reject them with
- * `RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE`.
+ * Phase 4a shipped `python3`; Phase 4b/4c added `go` and `java`. Other
+ * LeetCode languages remain valid for `submit_solution` but are not
+ * accepted by `run_local_tests`.
  */
 export type RunnerLanguage = "python3" | "go" | "java";
 

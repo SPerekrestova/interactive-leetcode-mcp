@@ -52,7 +52,7 @@ export class RunnerToolRegistry extends ToolRegistry {
             "run_local_tests",
             {
                 description:
-                    "Runs the user's code locally in an isolated subprocess, captures stdout / stderr / exit code, and updates the session's lastLocalRunPassed flag. Use this in the inner loop instead of submit_solution — it costs no LeetCode submission and turns around in seconds. The agent is responsible for including test invocations (e.g. `print(Solution().twoSum([2,7,11,15], 9))`) in the code passed in. Currently runnable: python3 and go; java lands in Phase 4c.",
+                    "Runs the user's code locally in an isolated subprocess, captures stdout / stderr / exit code, and updates the session's lastLocalRunPassed flag. Use this in the inner loop instead of submit_solution — it costs no LeetCode submission and turns around in seconds. The agent is responsible for including test invocations (e.g. `print(Solution().twoSum([2,7,11,15], 9))`) in the code passed in. Currently runnable: python3, go, and java.",
                 inputSchema: {
                     titleSlug: z
                         .string()

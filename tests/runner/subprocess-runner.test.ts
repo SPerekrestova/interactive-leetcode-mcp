@@ -19,11 +19,7 @@ import {
     SubprocessRunner,
     __resetProbeCacheForTest
 } from "../../src/runner/subprocess-runner.js";
-import {
-    ErrorCode,
-    isLeetCodeError,
-    type RunnerLanguage
-} from "../../src/types/index.js";
+import { ErrorCode, isLeetCodeError } from "../../src/types/index.js";
 
 function runtimeAvailable(cmd: string, args: string[]): boolean {
     try {
@@ -35,6 +31,7 @@ function runtimeAvailable(cmd: string, args: string[]): boolean {
 }
 
 const GO_PRESENT = runtimeAvailable("go", ["version"]);
+const JAVA_PRESENT = runtimeAvailable("java", ["-version"]);
 
 describe("SubprocessRunner", () => {
     let runner: SubprocessRunner;
@@ -144,6 +141,32 @@ describe("SubprocessRunner", () => {
             30_000
         );
 
+        it.skipIf(!JAVA_PRESENT)(
+            "executes a happy-path Java program",
+            async () => {
+                const result = await runner.run({
+                    titleSlug: "two-sum",
+                    language: "java",
+                    timeoutMs: 20_000,
+                    code: [
+                        "public class Solution {",
+                        "    public static void main(String[] args) {",
+                        '        System.out.println("hello from java");',
+                        '        if (1 + 1 != 2) { throw new RuntimeException("bad math"); }',
+                        "    }",
+                        "}"
+                    ].join("\n")
+                });
+
+                expect(result.passed).toBe(true);
+                expect(result.exitCode).toBe(0);
+                expect(result.timedOut).toBe(false);
+                expect(result.stdout).toContain("hello from java");
+                expect(result.stderr).toBe("");
+            },
+            30_000
+        );
+
         it("reuses a stable Go build cache across runs", async () => {
             __setSandboxCacheForTest({ kind: "none" });
             const fakeBin = await mkdtemp(join(tmpdir(), "fake-go-bin-"));
@@ -211,6 +234,24 @@ describe("SubprocessRunner", () => {
             }
         );
 
+        it.skipIf(JAVA_PRESENT)(
+            "reports LANGUAGE_RUNTIME_NOT_FOUND when Java is unavailable",
+            async () => {
+                await expect(async () => {
+                    await runner.run({
+                        titleSlug: "two-sum",
+                        language: "java",
+                        code: "public class Solution {}"
+                    });
+                }).rejects.toSatisfy((error: unknown) => {
+                    if (!isLeetCodeError(error)) {
+                        return false;
+                    }
+                    return error.code === ErrorCode.LANGUAGE_RUNTIME_NOT_FOUND;
+                });
+            }
+        );
+
         it("kills runaway processes after the timeout budget", async () => {
             const start = Date.now();
             const result = await runner.run({
@@ -226,23 +267,6 @@ describe("SubprocessRunner", () => {
             // Tolerate slow CI: budget + the 500 ms SIGTERM-then-SIGKILL
             // grace + scheduler jitter. Should not run for full 5s.
             expect(elapsed).toBeLessThan(2_500);
-        });
-
-        it("rejects still-unimplemented languages with RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE", async () => {
-            await expect(async () => {
-                await runner.run({
-                    titleSlug: "two-sum",
-                    language: "java" as RunnerLanguage,
-                    code: "public class Solution {}"
-                });
-            }).rejects.toSatisfy((error: unknown) => {
-                if (!isLeetCodeError(error)) {
-                    return false;
-                }
-                return (
-                    error.code === ErrorCode.RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE
-                );
-            });
         });
 
         it("forwards a clean env (no leaking secrets)", async () => {

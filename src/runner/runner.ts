@@ -33,7 +33,7 @@ export const SUPPORTED_LANGUAGES: readonly RunnerLanguage[] = [
 
 /**
  * The languages this build of the runner has *implemented*. Phase 4a
- * shipped `python3`; Phase 4b adds `go`; Phase 4c adds `java`.
+ * shipped `python3`; Phase 4b added `go`; Phase 4c added `java`.
  *
  * Kept distinct from `SUPPORTED_LANGUAGES` so the wire-level
  * `RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE` error has a single source of
@@ -42,5 +42,6 @@ export const SUPPORTED_LANGUAGES: readonly RunnerLanguage[] = [
  */
 export const IMPLEMENTED_LANGUAGES: readonly RunnerLanguage[] = [
     "python3",
-    "go"
+    "go",
+    "java"
 ] as const;

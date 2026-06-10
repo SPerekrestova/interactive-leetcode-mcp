@@ -33,6 +33,11 @@ const TWO_SUM_PROBLEM = {
             lang: "Go",
             langSlug: "go",
             code: "package main\n\nfunc main() {}\n"
+        },
+        {
+            lang: "Java",
+            langSlug: "java",
+            code: "class Solution {\n    public static void main(String[] args) {}\n}\n"
         }
     ],
     similarQuestions: "[]",
@@ -71,6 +76,17 @@ function goAvailable(): boolean {
 }
 
 const GO_PRESENT = goAvailable();
+
+function javaAvailable(): boolean {
+    try {
+        execFileSync("java", ["-version"], { stdio: "ignore" });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+const JAVA_PRESENT = javaAvailable();
 
 describe.skipIf(!PYTHON_PRESENT)("e2e: local runner (python3)", () => {
     let spawned: SpawnedServer | undefined;
@@ -201,27 +217,6 @@ describe.skipIf(!PYTHON_PRESENT)("e2e: local runner (python3)", () => {
         expect(payload.result.passed).toBe(false);
     });
 
-    it("rejects unimplemented languages with RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE", async () => {
-        spawned = await spawnServer({ fixture: FIXTURE });
-
-        await spawned.client.callTool({
-            name: "start_problem",
-            arguments: { titleSlug: "two-sum", language: "java" }
-        });
-
-        const run = (await spawned.client.callTool({
-            name: "run_local_tests",
-            arguments: {
-                titleSlug: "two-sum",
-                language: "java",
-                code: "public class Solution {}"
-            }
-        })) as ToolTextResult;
-
-        const payload = JSON.parse(run.content[0].text);
-        expect(payload.code).toBe("RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE");
-    });
-
     it("blocks submit_solution under strict mode until run_local_tests passes", async () => {
         spawned = await spawnServer({
             fixture: FIXTURE,
@@ -314,6 +309,56 @@ describe.skipIf(!GO_PRESENT)("e2e: local runner (go)", () => {
         expect(payload.result.passed).toBe(true);
         expect(payload.result.exitCode).toBe(0);
         expect(payload.result.stdout).toContain("go ok");
+
+        const state = (await spawned.client.callTool({
+            name: "get_session_state",
+            arguments: { titleSlug: "two-sum" }
+        })) as ToolTextResult;
+        const sessionPayload = JSON.parse(state.content[0].text);
+        expect(sessionPayload.session.lastLocalRunPassed).toBe(true);
+        expect(sessionPayload.session.attempts).toBe(1);
+    });
+});
+
+describe.skipIf(!JAVA_PRESENT)("e2e: local runner (java)", () => {
+    let spawned: SpawnedServer | undefined;
+
+    afterEach(async () => {
+        if (spawned) {
+            await spawned.cleanup();
+            spawned = undefined;
+        }
+    });
+
+    it("executes a passing Java program and updates the session", async () => {
+        spawned = await spawnServer({ fixture: FIXTURE });
+
+        await spawned.client.callTool({
+            name: "start_problem",
+            arguments: { titleSlug: "two-sum", language: "java" }
+        });
+
+        const run = (await spawned.client.callTool({
+            name: "run_local_tests",
+            arguments: {
+                titleSlug: "two-sum",
+                language: "java",
+                code: [
+                    "public class Solution {",
+                    "    public static void main(String[] args) {",
+                    '        System.out.println("java ok");',
+                    '        if (1 + 1 != 2) { throw new RuntimeException("bad math"); }',
+                    "    }",
+                    "}"
+                ].join("\n")
+            }
+        })) as ToolTextResult;
+
+        const payload = JSON.parse(run.content[0].text);
+        expect(payload.titleSlug).toBe("two-sum");
+        expect(payload.result.passed).toBe(true);
+        expect(payload.result.exitCode).toBe(0);
+        expect(payload.result.stdout).toContain("java ok");
 
         const state = (await spawned.client.callTool({
             name: "get_session_state",

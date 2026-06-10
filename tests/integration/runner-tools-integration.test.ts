@@ -234,13 +234,13 @@ describe("Runner Tools Integration", () => {
         );
 
         it(
-            "surfaces RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE for still-unimplemented languages",
+            "surfaces runner language-runtime errors",
             async () => {
                 await sessions.startOrResume({ slug: "two-sum" });
                 const broken = createFakeRunner({
                     runError: new LeetCodeError(
-                        ErrorCode.RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE,
-                        "Java runner ships in Phase 4c"
+                        ErrorCode.LANGUAGE_RUNTIME_NOT_FOUND,
+                        "Required runtime for java not found on PATH"
                     )
                 });
                 await testClient.cleanup();
@@ -264,9 +264,7 @@ describe("Runner Tools Integration", () => {
 
                 assertions.hasToolResultStructure(result);
                 const payload = JSON.parse(result.content[0].text);
-                expect(payload.code).toBe(
-                    ErrorCode.RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE
-                );
+                expect(payload.code).toBe(ErrorCode.LANGUAGE_RUNTIME_NOT_FOUND);
 
                 // The session attempt counter should NOT bump on a
                 // pre-run rejection.
