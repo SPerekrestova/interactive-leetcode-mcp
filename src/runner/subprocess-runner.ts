@@ -1,7 +1,7 @@
 /**
  * Plain-subprocess `LocalRunner` implementation.
  *
- * Per-language registry (currently `python3`) describes how to:
+ * Per-language registry (currently `python3` and `go`) describes how to:
  *   - probe whether the runtime is available on PATH
  *   - spawn the runtime against a source file written to the run's
  *     temp dir
@@ -59,8 +59,7 @@ interface LanguageSpec {
     probe: { cmd: string; args: string[] };
     /**
      * Build the spawn args given the path of the source file we wrote
-     * for this run. Compiled languages (Go, Java) will hook in extra
-     * compile steps via subclassing later.
+     * for this run.
      */
     buildArgs(sourcePath: string): { cmd: string; args: string[] };
 }
@@ -74,18 +73,16 @@ const LANGUAGES: Record<RunnerLanguage, LanguageSpec> = {
             args: [sourcePath]
         })
     },
-    // Phase 4b/4c stubs — present in the registry so the type system
+    // Phase 4c stub — present in the registry so the type system
     // requires they stay in sync with `RunnerLanguage`. The runner
-    // refuses to use these until we actually wire harnesses.
+    // refuses to use it until we actually wire the harness.
     go: {
         extension: "go",
         probe: { cmd: "go", args: ["version"] },
-        buildArgs: () => {
-            throw new LeetCodeError(
-                ErrorCode.RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE,
-                "Go runner ships in Phase 4b"
-            );
-        }
+        buildArgs: (sourcePath) => ({
+            cmd: "go",
+            args: ["run", sourcePath]
+        })
     },
     java: {
         extension: "java",

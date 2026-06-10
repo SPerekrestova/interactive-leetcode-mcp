@@ -234,13 +234,13 @@ describe("Runner Tools Integration", () => {
         );
 
         it(
-            "surfaces RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE thrown from the runner",
+            "surfaces RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE for still-unimplemented languages",
             async () => {
                 await sessions.startOrResume({ slug: "two-sum" });
                 const broken = createFakeRunner({
                     runError: new LeetCodeError(
                         ErrorCode.RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE,
-                        "Go runner ships in Phase 4b"
+                        "Java runner ships in Phase 4c"
                     )
                 });
                 await testClient.cleanup();
@@ -257,8 +257,8 @@ describe("Runner Tools Integration", () => {
                     name: "run_local_tests",
                     arguments: {
                         titleSlug: "two-sum",
-                        language: "go",
-                        code: "package main"
+                        language: "java",
+                        code: "public class Solution {}"
                     }
                 });
 
