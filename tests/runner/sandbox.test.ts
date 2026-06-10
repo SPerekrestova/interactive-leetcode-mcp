@@ -25,6 +25,25 @@ describe("sandbox wrapping", () => {
         );
     });
 
+    it("allows additional writable paths for runtime caches", async () => {
+        __setSandboxCacheForTest({ kind: "bwrap" });
+
+        const wrapped = await wrapWithSandbox(
+            "go",
+            ["run", "solution.go"],
+            "/tmp/leetcode-mcp-run-work",
+            ["/tmp/leetcode-mcp-go-cache"]
+        );
+
+        expect(wrapped.args).toEqual(
+            expect.arrayContaining([
+                "--bind",
+                "/tmp/leetcode-mcp-run-work",
+                "/tmp/leetcode-mcp-go-cache"
+            ])
+        );
+    });
+
     it("rejects sandbox-exec subpaths containing newlines", async () => {
         __setSandboxCacheForTest({ kind: "sandbox-exec" });
 

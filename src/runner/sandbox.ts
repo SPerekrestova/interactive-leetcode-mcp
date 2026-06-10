@@ -113,9 +113,11 @@ export async function detectSandbox(): Promise<DetectedSandbox> {
 export async function wrapWithSandbox(
     cmd: string,
     args: string[],
-    cwdAllowed: string
+    cwdAllowed: string,
+    writablePaths: string[] = []
 ): Promise<{ cmd: string; args: string[]; kind: SandboxKind }> {
     const detected = await detectSandbox();
+    const allowedWritePaths = [cwdAllowed, ...writablePaths];
     if (detected.kind === "bwrap") {
         return {
             cmd: "bwrap",
@@ -125,9 +127,7 @@ export async function wrapWithSandbox(
                 "/",
                 "--tmpfs",
                 "/tmp",
-                "--bind",
-                cwdAllowed,
-                cwdAllowed,
+                ...allowedWritePaths.flatMap((path) => ["--bind", path, path]),
                 "--proc",
                 "/proc",
                 "--dev",
@@ -149,7 +149,7 @@ export async function wrapWithSandbox(
                 "--noprofile",
                 "--net=none",
                 "--private-tmp",
-                `--whitelist=${cwdAllowed}`,
+                ...allowedWritePaths.map((path) => `--whitelist=${path}`),
                 "--",
                 cmd,
                 ...args
@@ -159,14 +159,19 @@ export async function wrapWithSandbox(
     }
     if (detected.kind === "sandbox-exec") {
         // Minimal sandbox-exec profile — deny by default, allow process
-        // primitives + reads everywhere + writes only under cwdAllowed.
-        const writableSubpath = escapeSandboxProfileString(cwdAllowed);
+        // primitives + reads everywhere + writes only under allowed paths.
+        const writableSubpaths = allowedWritePaths
+            .map(
+                (path) =>
+                    `(allow file-write* (subpath "${escapeSandboxProfileString(path)}"))`
+            )
+            .join("\n");
         const profile = `(version 1)
 (deny default)
 (allow process-fork)
 (allow process-exec)
 (allow file-read*)
-(allow file-write* (subpath "${writableSubpath}"))
+${writableSubpaths}
 (allow file-write* (regex #"^/dev/null$"))
 (allow file-write* (regex #"^/dev/dtracehelper$"))
 (allow sysctl-read)

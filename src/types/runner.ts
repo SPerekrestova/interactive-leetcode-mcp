@@ -47,9 +47,10 @@ export interface RunInput {
      */
     code: string;
     /**
-     * Wall-clock budget in milliseconds. Defaults to 5_000 if omitted.
-     * The runner kills the subprocess when this elapses and returns
-     * `timedOut: true` with whatever partial output was captured.
+     * Wall-clock budget in milliseconds. If omitted, the runner chooses
+     * a language-specific default. The runner kills the subprocess when
+     * this elapses and returns `timedOut: true` with whatever partial
+     * output was captured.
      */
     timeoutMs?: number;
 }

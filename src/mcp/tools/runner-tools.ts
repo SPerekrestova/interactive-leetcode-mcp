@@ -78,7 +78,7 @@ export class RunnerToolRegistry extends ToolRegistry {
                         .max(60_000)
                         .optional()
                         .describe(
-                            "Optional wall-clock budget in milliseconds. Defaults to 5000."
+                            "Optional wall-clock budget in milliseconds. Defaults are language-specific."
                         )
                 }
             },
