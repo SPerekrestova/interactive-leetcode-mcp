@@ -1,7 +1,7 @@
 /**
  * Plain-subprocess `LocalRunner` implementation.
  *
- * Per-language registry (currently `python3`) describes how to:
+ * Per-language registry (currently `python3` and `go`) describes how to:
  *   - probe whether the runtime is available on PATH
  *   - spawn the runtime against a source file written to the run's
  *     temp dir
@@ -10,10 +10,10 @@
  * results are cached for the lifetime of the process.
  *
  * Safety nets every run gets, even with no OS sandbox:
- *   - per-process wall-clock timeout (default 5_000 ms; configurable
- *     per `RunInput`)
- *   - clean env (just PATH / HOME / LANG forwarded — secrets in the
- *     user's shell never leak in)
+ *   - per-process wall-clock timeout (language-specific default;
+ *     configurable per `RunInput`)
+ *   - clean env (PATH / HOME / LANG plus language-specific cache dirs —
+ *     secrets in the user's shell never leak in)
  *   - cwd is a freshly-mkdtemp'd directory under the OS tmp; it is
  *     removed after the run regardless of outcome
  *   - stdout/stderr captured with a 1 MB ceiling; runaway output gets
@@ -24,7 +24,7 @@ import {
     spawn,
     type ChildProcess
 } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { performance } from "node:perf_hooks";
@@ -50,6 +50,7 @@ const execFile = promisify(execFileCb);
 
 const MAX_OUTPUT_BYTES = 1_000_000; // 1 MB per stream
 const DEFAULT_TIMEOUT_MS = 5_000;
+const GO_DEFAULT_TIMEOUT_MS = 20_000;
 const TRUNCATION_MARKER = "\n[...output truncated at 1 MB...]";
 
 interface LanguageSpec {
@@ -57,12 +58,55 @@ interface LanguageSpec {
     extension: string;
     /** `[binary, args]` to probe — exit code 0 means available. */
     probe: { cmd: string; args: string[] };
+    defaultTimeoutMs?: number;
+    prepareRuntime?(): Promise<RuntimeLayout>;
     /**
      * Build the spawn args given the path of the source file we wrote
-     * for this run. Compiled languages (Go, Java) will hook in extra
-     * compile steps via subclassing later.
+     * for this run.
      */
     buildArgs(sourcePath: string): { cmd: string; args: string[] };
+}
+
+interface RuntimeLayout {
+    env: Record<string, string>;
+    writablePaths: string[];
+}
+
+interface GoRuntimePaths {
+    root: string;
+    buildCache: string;
+    moduleCache: string;
+}
+
+let goRuntimePathsPromise: Promise<GoRuntimePaths> | undefined;
+
+async function getGoRuntimePaths(): Promise<GoRuntimePaths> {
+    if (!goRuntimePathsPromise) {
+        const attempt = (async () => {
+            const root = await mkdtemp(join(tmpdir(), "leetcode-mcp-go-"));
+            const buildCache = join(root, "go-build");
+            const moduleCache = join(root, "gomod");
+            await mkdir(buildCache, { recursive: true });
+            await mkdir(moduleCache, { recursive: true });
+            return { root, buildCache, moduleCache };
+        })();
+        goRuntimePathsPromise = attempt.catch((error) => {
+            goRuntimePathsPromise = undefined;
+            throw error;
+        });
+    }
+    return goRuntimePathsPromise;
+}
+
+async function prepareGoRuntime(): Promise<RuntimeLayout> {
+    const paths = await getGoRuntimePaths();
+    return {
+        env: {
+            GOCACHE: paths.buildCache,
+            GOMODCACHE: paths.moduleCache
+        },
+        writablePaths: [paths.root]
+    };
 }
 
 const LANGUAGES: Record<RunnerLanguage, LanguageSpec> = {
@@ -74,19 +118,19 @@ const LANGUAGES: Record<RunnerLanguage, LanguageSpec> = {
             args: [sourcePath]
         })
     },
-    // Phase 4b/4c stubs — present in the registry so the type system
-    // requires they stay in sync with `RunnerLanguage`. The runner
-    // refuses to use these until we actually wire harnesses.
     go: {
         extension: "go",
         probe: { cmd: "go", args: ["version"] },
-        buildArgs: () => {
-            throw new LeetCodeError(
-                ErrorCode.RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE,
-                "Go runner ships in Phase 4b"
-            );
-        }
+        defaultTimeoutMs: GO_DEFAULT_TIMEOUT_MS,
+        prepareRuntime: prepareGoRuntime,
+        buildArgs: (sourcePath) => ({
+            cmd: "go",
+            args: ["run", sourcePath]
+        })
     },
+    // Phase 4c stub — present in the registry so the type system
+    // requires it stays in sync with `RunnerLanguage`. The runner
+    // refuses to use it until we actually wire the harness.
     java: {
         extension: "java",
         probe: { cmd: "java", args: ["-version"] },
@@ -223,7 +267,12 @@ export class SubprocessRunner implements LocalRunner {
         }
 
         const spec = LANGUAGES[input.language];
-        const timeoutMs = input.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+        const timeoutMs =
+            input.timeoutMs ?? spec.defaultTimeoutMs ?? DEFAULT_TIMEOUT_MS;
+        const runtimeLayout = (await spec.prepareRuntime?.()) ?? {
+            env: {},
+            writablePaths: []
+        };
         const workDir = await mkdtemp(join(tmpdir(), "leetcode-mcp-run-"));
         const sourcePath = join(workDir, `solution.${spec.extension}`);
 
@@ -233,7 +282,8 @@ export class SubprocessRunner implements LocalRunner {
             const wrapped = await wrapWithSandbox(
                 baseArgs.cmd,
                 baseArgs.args,
-                workDir
+                workDir,
+                runtimeLayout.writablePaths
             );
 
             return await this.spawnAndCapture({
@@ -241,7 +291,8 @@ export class SubprocessRunner implements LocalRunner {
                 args: wrapped.args,
                 cwd: workDir,
                 timeoutMs,
-                sandbox: wrapped.kind
+                sandbox: wrapped.kind,
+                env: runtimeLayout.env
             });
         } finally {
             await rm(workDir, { recursive: true, force: true }).catch(
@@ -261,6 +312,7 @@ export class SubprocessRunner implements LocalRunner {
         cwd: string;
         timeoutMs: number;
         sandbox: SandboxKind;
+        env: Record<string, string>;
     }): Promise<RunResult> {
         return new Promise((resolve) => {
             const start = performance.now();
@@ -269,7 +321,8 @@ export class SubprocessRunner implements LocalRunner {
                 env: {
                     PATH: process.env.PATH ?? "",
                     HOME: options.cwd,
-                    LANG: process.env.LANG ?? "C.UTF-8"
+                    LANG: process.env.LANG ?? "C.UTF-8",
+                    ...options.env
                 },
                 detached: process.platform !== "win32",
                 stdio: ["ignore", "pipe", "pipe"]

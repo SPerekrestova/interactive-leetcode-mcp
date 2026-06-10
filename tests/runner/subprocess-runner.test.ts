@@ -6,8 +6,15 @@
  * availability; a missing python3 produces a `LANGUAGE_RUNTIME_NOT_FOUND`
  * which is its own first-class assertion.
  */
+import { execFileSync } from "node:child_process";
+import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { delimiter, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { __resetSandboxCacheForTest } from "../../src/runner/sandbox.js";
+import {
+    __resetSandboxCacheForTest,
+    __setSandboxCacheForTest
+} from "../../src/runner/sandbox.js";
 import {
     SubprocessRunner,
     __resetProbeCacheForTest
@@ -17,6 +24,17 @@ import {
     isLeetCodeError,
     type RunnerLanguage
 } from "../../src/types/index.js";
+
+function runtimeAvailable(cmd: string, args: string[]): boolean {
+    try {
+        execFileSync(cmd, args, { stdio: "ignore" });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+const GO_PRESENT = runtimeAvailable("go", ["version"]);
 
 describe("SubprocessRunner", () => {
     let runner: SubprocessRunner;
@@ -44,7 +62,7 @@ describe("SubprocessRunner", () => {
             expect(typeof py?.available).toBe("boolean");
         });
 
-        it("reports go and java as supported languages even before they are implemented", async () => {
+        it("reports all supported local-runner languages", async () => {
             const caps = await runner.capabilities();
             const langs = caps.languages.map((l) => l.language).sort();
             expect(langs).toEqual(["go", "java", "python3"]);
@@ -100,6 +118,99 @@ describe("SubprocessRunner", () => {
             expect(result.stderr).toContain("boom");
         });
 
+        it.skipIf(!GO_PRESENT)(
+            "executes a happy-path Go program",
+            async () => {
+                const result = await runner.run({
+                    titleSlug: "two-sum",
+                    language: "go",
+                    timeoutMs: 20_000,
+                    code: [
+                        "package main",
+                        'import "fmt"',
+                        "func main() {",
+                        '    fmt.Println("hello from go")',
+                        '    if 1 + 1 != 2 { panic("bad math") }',
+                        "}"
+                    ].join("\n")
+                });
+
+                expect(result.passed).toBe(true);
+                expect(result.exitCode).toBe(0);
+                expect(result.timedOut).toBe(false);
+                expect(result.stdout).toContain("hello from go");
+                expect(result.stderr).toBe("");
+            },
+            30_000
+        );
+
+        it("reuses a stable Go build cache across runs", async () => {
+            __setSandboxCacheForTest({ kind: "none" });
+            const fakeBin = await mkdtemp(join(tmpdir(), "fake-go-bin-"));
+            const fakeGo = join(fakeBin, "go");
+            const originalPath = process.env.PATH;
+            const script = [
+                "#!/usr/bin/env node",
+                'if (process.argv[2] === "version") {',
+                '  console.log("go version go1.test linux/amd64");',
+                "} else {",
+                "  console.log(JSON.stringify({",
+                "    home: process.env.HOME,",
+                "    gocache: process.env.GOCACHE,",
+                "    gomodcache: process.env.GOMODCACHE",
+                "  }));",
+                "}"
+            ].join("\n");
+
+            try {
+                await writeFile(fakeGo, script, "utf-8");
+                await chmod(fakeGo, 0o755);
+                process.env.PATH = `${fakeBin}${delimiter}${originalPath ?? ""}`;
+                __resetProbeCacheForTest();
+
+                const first = await runner.run({
+                    titleSlug: "two-sum",
+                    language: "go",
+                    code: "package main\nfunc main() {}"
+                });
+                const second = await runner.run({
+                    titleSlug: "two-sum",
+                    language: "go",
+                    code: "package main\nfunc main() {}"
+                });
+
+                const firstEnv = JSON.parse(first.stdout);
+                const secondEnv = JSON.parse(second.stdout);
+                expect(firstEnv.home).not.toBe(secondEnv.home);
+                expect(firstEnv.gocache).toBe(secondEnv.gocache);
+                expect(firstEnv.gomodcache).toBe(secondEnv.gomodcache);
+                expect(firstEnv.gocache).toContain("leetcode-mcp-go-");
+                expect(firstEnv.gomodcache).toContain("leetcode-mcp-go-");
+            } finally {
+                process.env.PATH = originalPath;
+                __resetProbeCacheForTest();
+                await rm(fakeBin, { recursive: true, force: true });
+            }
+        });
+
+        it.skipIf(GO_PRESENT)(
+            "reports LANGUAGE_RUNTIME_NOT_FOUND when Go is unavailable",
+            async () => {
+                await expect(async () => {
+                    await runner.run({
+                        titleSlug: "two-sum",
+                        language: "go",
+                        code: "package main\nfunc main() {}"
+                    });
+                }).rejects.toSatisfy((error: unknown) => {
+                    if (!isLeetCodeError(error)) {
+                        return false;
+                    }
+                    return error.code === ErrorCode.LANGUAGE_RUNTIME_NOT_FOUND;
+                });
+            }
+        );
+
         it("kills runaway processes after the timeout budget", async () => {
             const start = Date.now();
             const result = await runner.run({
@@ -117,12 +228,12 @@ describe("SubprocessRunner", () => {
             expect(elapsed).toBeLessThan(2_500);
         });
 
-        it("rejects unsupported languages with RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE", async () => {
+        it("rejects still-unimplemented languages with RUNNER_NOT_IMPLEMENTED_FOR_LANGUAGE", async () => {
             await expect(async () => {
                 await runner.run({
                     titleSlug: "two-sum",
-                    language: "go" as RunnerLanguage,
-                    code: 'package main\nfunc main() { println("hi") }'
+                    language: "java" as RunnerLanguage,
+                    code: "public class Solution {}"
                 });
             }).rejects.toSatisfy((error: unknown) => {
                 if (!isLeetCodeError(error)) {

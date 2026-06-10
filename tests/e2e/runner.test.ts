@@ -1,10 +1,10 @@
 /**
  * Local-runner e2e: spawn the real `build/index.js`, drive
  * `runner_doctor` and `run_local_tests` over the wire, and assert the
- * runner actually executes Python on the host.
+ * runner actually executes available runtimes on the host.
  *
- * Skipped automatically on hosts without `python3` so the suite stays
- * portable; the project's CI image has it.
+ * Runtime-specific cases skip automatically when that runtime is absent,
+ * so the suite stays portable.
  */
 import { execFileSync } from "node:child_process";
 import { afterEach, describe, expect, it } from "vitest";
@@ -28,6 +28,11 @@ const TWO_SUM_PROBLEM = {
             lang: "Python3",
             langSlug: "python3",
             code: "class Solution:\n    def twoSum(self, nums, target):\n        pass\n"
+        },
+        {
+            lang: "Go",
+            langSlug: "go",
+            code: "package main\n\nfunc main() {}\n"
         }
     ],
     similarQuestions: "[]",
@@ -55,6 +60,17 @@ function pythonAvailable(): boolean {
 }
 
 const PYTHON_PRESENT = pythonAvailable();
+
+function goAvailable(): boolean {
+    try {
+        execFileSync("go", ["version"], { stdio: "ignore" });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+const GO_PRESENT = goAvailable();
 
 describe.skipIf(!PYTHON_PRESENT)("e2e: local runner (python3)", () => {
     let spawned: SpawnedServer | undefined;
@@ -190,15 +206,15 @@ describe.skipIf(!PYTHON_PRESENT)("e2e: local runner (python3)", () => {
 
         await spawned.client.callTool({
             name: "start_problem",
-            arguments: { titleSlug: "two-sum", language: "go" }
+            arguments: { titleSlug: "two-sum", language: "java" }
         });
 
         const run = (await spawned.client.callTool({
             name: "run_local_tests",
             arguments: {
                 titleSlug: "two-sum",
-                language: "go",
-                code: "package main\nfunc main() {}"
+                language: "java",
+                code: "public class Solution {}"
             }
         })) as ToolTextResult;
 
@@ -256,5 +272,55 @@ describe.skipIf(!PYTHON_PRESENT)("e2e: local runner (python3)", () => {
         })) as ToolTextResult;
         const allowedPayload = JSON.parse(allowed.content[0].text);
         expect(allowedPayload.code).not.toBe("LOCAL_TESTS_NOT_PASSED");
+    });
+});
+
+describe.skipIf(!GO_PRESENT)("e2e: local runner (go)", () => {
+    let spawned: SpawnedServer | undefined;
+
+    afterEach(async () => {
+        if (spawned) {
+            await spawned.cleanup();
+            spawned = undefined;
+        }
+    });
+
+    it("executes a passing Go program and updates the session", async () => {
+        spawned = await spawnServer({ fixture: FIXTURE });
+
+        await spawned.client.callTool({
+            name: "start_problem",
+            arguments: { titleSlug: "two-sum", language: "go" }
+        });
+
+        const run = (await spawned.client.callTool({
+            name: "run_local_tests",
+            arguments: {
+                titleSlug: "two-sum",
+                language: "go",
+                code: [
+                    "package main",
+                    'import "fmt"',
+                    "func main() {",
+                    '    fmt.Println("go ok")',
+                    '    if 1 + 1 != 2 { panic("bad math") }',
+                    "}"
+                ].join("\n")
+            }
+        })) as ToolTextResult;
+
+        const payload = JSON.parse(run.content[0].text);
+        expect(payload.titleSlug).toBe("two-sum");
+        expect(payload.result.passed).toBe(true);
+        expect(payload.result.exitCode).toBe(0);
+        expect(payload.result.stdout).toContain("go ok");
+
+        const state = (await spawned.client.callTool({
+            name: "get_session_state",
+            arguments: { titleSlug: "two-sum" }
+        })) as ToolTextResult;
+        const sessionPayload = JSON.parse(state.content[0].text);
+        expect(sessionPayload.session.lastLocalRunPassed).toBe(true);
+        expect(sessionPayload.session.attempts).toBe(1);
     });
 });
