@@ -218,6 +218,22 @@ To activate learning mode, tell Claude you want to practice with guidance — fo
 3. **Implement your solution** with progressive guidance
 4. **Request the solution** only when you want to compare with optimal approach ("Show me the solution")
 
+## Dogfood Testing
+
+To test the MCP server as a black-box MCP client without live LeetCode traffic:
+
+```bash
+npm run dogfood:local
+```
+
+This builds the server, spawns `build/index.js` over stdio, connects with the
+MCP SDK client, uses an isolated `HOME`, serves LeetCode responses from fixtures,
+and drives a user-like flow through `runner_doctor`, `start_problem`,
+`request_hint`, `run_local_tests`, and `get_session_state`.
+
+See [DOGFOOD_TESTING.md](DOGFOOD_TESTING.md) for the full workflow and a
+copy-paste prompt for local Claude/agent dogfood testing.
+
 ## Troubleshooting
 
 **"Not authorized" or "Invalid credentials" error**
