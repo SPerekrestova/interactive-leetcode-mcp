@@ -175,30 +175,40 @@ async function spawnDogfoodServer(): Promise<SpawnedDogfoodServer> {
         args: [SERVER_BIN],
         env,
         cwd: REPO_ROOT,
-        stderr: "pipe"
+        stderr: "inherit"
     });
 
     const client = new Client({
         name: "leetcode-mcp-dogfood",
         version: "0.0.0"
     });
-    await client.connect(transport);
+
+    const cleanup = async () => {
+        try {
+            await client.close();
+        } catch {
+            // A failed connect may leave the client half-open; cleanup should continue.
+        } finally {
+            if (process.env.DOGFOOD_KEEP_HOME === "1") {
+                console.log(`Keeping dogfood HOME for inspection: ${home}`);
+            } else {
+                await rm(home, { recursive: true, force: true });
+            }
+            await rm(fixtureDir, { recursive: true, force: true });
+        }
+    };
+
+    try {
+        await client.connect(transport);
+    } catch (error) {
+        await cleanup();
+        throw error;
+    }
 
     return {
         client,
         home,
-        cleanup: async () => {
-            try {
-                await client.close();
-            } finally {
-                if (process.env.DOGFOOD_KEEP_HOME === "1") {
-                    console.log(`Keeping dogfood HOME for inspection: ${home}`);
-                } else {
-                    await rm(home, { recursive: true, force: true });
-                }
-                await rm(fixtureDir, { recursive: true, force: true });
-            }
-        }
+        cleanup
     };
 }
 
