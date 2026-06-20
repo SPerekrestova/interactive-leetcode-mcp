@@ -15,7 +15,7 @@ export default defineConfig([
         rules: {
             ...prettierRules
         },
-        languageOptions: { globals: globals.browser }
+        languageOptions: { globals: globals.node }
     },
     tseslint.configs.recommended,
     {
@@ -30,6 +30,16 @@ export default defineConfig([
                     ignoreRestSiblings: true
                 }
             ]
+        }
+    },
+    {
+        files: ["**/*.cjs"],
+        languageOptions: {
+            sourceType: "commonjs",
+            globals: globals.node
+        },
+        rules: {
+            "@typescript-eslint/no-require-imports": "off"
         }
     }
 ]);

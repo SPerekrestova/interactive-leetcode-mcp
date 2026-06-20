@@ -33,6 +33,14 @@
 
 ```bash
 npm install -g @sperekrestova/interactive-leetcode-mcp
+interactive-leetcode-mcp --version
+interactive-leetcode-mcp --help
+```
+
+You can also run the package without installing it globally:
+
+```bash
+npx -y @sperekrestova/interactive-leetcode-mcp@latest --version
 ```
 
 ### From Source
@@ -43,6 +51,24 @@ cd interactive-leetcode-mcp
 npm install && npm run build
 npm link
 ```
+
+### Fresh Environment Smoke Test
+
+Use this to verify the published npm package from a clean directory without any
+LeetCode credentials:
+
+```bash
+mkdir leetcode-mcp-smoke
+cd leetcode-mcp-smoke
+npm init -y
+npm install @sperekrestova/interactive-leetcode-mcp
+npx --no-install interactive-leetcode-mcp --version
+npx --no-install interactive-leetcode-mcp --help
+```
+
+Those commands confirm that Node can install the package, expose the CLI binary,
+and start the MCP server entrypoint. Connect it to an MCP client for full tool
+testing.
 
 ## Configuration
 
@@ -61,7 +87,7 @@ Or add to your MCP configuration file (`~/.config/claude-code/mcp.json`) or (`~/
   "mcpServers": {
     "leetcode": {
       "command": "npx",
-      "args": ["-y", "interactive-leetcode-mcp"]
+      "args": ["-y", "@sperekrestova/interactive-leetcode-mcp@latest"]
     }
   }
 }
@@ -117,6 +143,14 @@ Claude: "🎉 Accepted! Runtime: 2ms (beats 95.3%)"
 
 ## Available Tools
 
+### Getting Started
+
+**`get_started`**
+
+- Returns the server usage guide, learning flow, authentication flow, and
+  submission language map
+- Call this at the start of a LeetCode practice session
+
 ### Authorization
 
 **`start_leetcode_auth`**
@@ -156,6 +190,56 @@ Claude: "🎉 Accepted! Runtime: 2ms (beats 95.3%)"
 - Search problems by difficulty, tags, keywords
 - Supports filtering and pagination
 
+### Session and Learning Tools
+
+**`start_problem`**
+
+- Opens or resumes a tutoring session for a problem
+- Parameters: `titleSlug`, optional `language`
+- Required before problem-specific hint and solution tools
+
+**`request_hint`**
+
+- Advances progressive hint levels for the active session
+- Parameters: `titleSlug`
+- Unlocks community solution tools after the final hint level
+
+**`get_session_state`**
+
+- Shows current hint level and session metadata
+- Parameters: `titleSlug`
+
+**`reset_session`**
+
+- Resets hint progress for a problem
+- Parameters: `titleSlug`
+
+### Local Runner Tools
+
+**`runner_doctor`**
+
+- Reports which local runtimes are available for supported languages
+
+**`run_local_tests`**
+
+- Runs user code against sample tests in a local subprocess sandbox
+- Parameters: `titleSlug`, `language`, `code`, optional `timeoutMs`
+
+### Solution Tools
+
+**`list_problem_solutions`**
+
+- Lists community/editorial solution articles for a problem
+- Parameters: `questionSlug`, optional `limit`, `skip`, `orderBy`, `userInput`,
+  `tagSlugs`
+- Requires the session to reach the solution-unlocked hint level
+
+**`get_problem_solution`**
+
+- Fetches a specific solution article
+- Parameters: `topicId`, `titleSlug`
+- Requires the session to reach the solution-unlocked hint level
+
 ### Submission Tools
 
 **`submit_solution`**
@@ -170,9 +254,29 @@ Claude: "🎉 Accepted! Runtime: 2ms (beats 95.3%)"
 
 - Retrieve user profile information
 
-**`get_user_submissions`**
+**`get_recent_submissions`**
 
 - Get submission history with filtering
+
+**`get_recent_ac_submissions`**
+
+- Get recent accepted submissions
+
+**`get_user_status`**
+
+- Get authenticated user's status/profile summary
+
+**`get_problem_submission_report`**
+
+- Get submission report for one problem
+
+**`get_problem_progress`**
+
+- Get solved/attempted progress for a problem
+
+**`get_all_submissions`**
+
+- Get paginated submission history
 
 **`get_user_contest_ranking`**
 
@@ -213,10 +317,14 @@ Guides you through the complete cycle:
 
 To activate learning mode, tell Claude you want to practice with guidance — for example, "Let's practice in learning mode" or "I want to learn two-sum with hints." Once active:
 
-1. **Fetch a problem** to see the description and get workspace setup guidance
-2. **Ask for hints** rather than solutions ("Give me a hint")
-3. **Implement your solution** with progressive guidance
-4. **Request the solution** only when you want to compare with optimal approach ("Show me the solution")
+1. **Call `get_started`** to load the server's usage guide
+2. **Fetch a problem** with `get_daily_challenge`, `search_problems`, or
+   `get_problem`
+3. **Open a session** with `start_problem`
+4. **Ask for hints** via `request_hint` rather than jumping straight to solutions
+5. **Implement your solution** with progressive guidance
+6. **Request the solution** only after the final hint level or when you want to
+   compare with an optimal approach
 
 ## Dogfood Testing
 

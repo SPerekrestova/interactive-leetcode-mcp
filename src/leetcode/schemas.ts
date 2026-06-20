@@ -76,6 +76,3 @@ export const ValidateCredentialsResponseSchema = z
             .passthrough()
     })
     .passthrough();
-
-export type SubmitResponse = z.infer<typeof SubmitResponseSchema>;
-export type CheckResponse = z.infer<typeof CheckResponseSchema>;
