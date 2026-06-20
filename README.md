@@ -66,9 +66,9 @@ npx --no-install interactive-leetcode-mcp --version
 npx --no-install interactive-leetcode-mcp --help
 ```
 
-Those commands confirm that Node can install the package, expose the CLI binary,
-and start the MCP server entrypoint. Connect it to an MCP client for full tool
-testing.
+Those commands confirm that Node can install the package and expose the CLI
+binary. For actual MCP server validation, use an integration test that connects
+over stdio and completes the MCP handshake.
 
 ## Configuration
 
