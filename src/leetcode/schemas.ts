@@ -26,8 +26,10 @@ export const CheckResponseSchema = z
         // populated once `state === "SUCCESS"`.
         status_msg: z.string().optional(),
         status_code: z.number().optional(),
-        runtime: z.string().optional(),
-        memory: z.string().optional(),
+        // LeetCode usually formats these as strings (e.g. "58.1 MB") but has
+        // been observed to return raw numeric values instead; accept both.
+        runtime: z.union([z.string(), z.number()]).optional(),
+        memory: z.union([z.string(), z.number()]).optional(),
         runtime_percentile: z.number().nullable().optional(),
         memory_percentile: z.number().nullable().optional(),
         // LeetCode has been observed to return both an array of strings (one

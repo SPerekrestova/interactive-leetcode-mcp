@@ -530,8 +530,14 @@ export class LeetCodeGlobalService implements LeetcodeServiceInterface {
                     if (accepted) {
                         return {
                             accepted: true,
-                            runtime: result.runtime,
-                            memory: result.memory,
+                            runtime:
+                                result.runtime !== undefined
+                                    ? String(result.runtime)
+                                    : undefined,
+                            memory:
+                                result.memory !== undefined
+                                    ? String(result.memory)
+                                    : undefined,
                             runtimePercentile:
                                 result.runtime_percentile ?? undefined,
                             memoryPercentile:

@@ -122,6 +122,47 @@ describe("LeetCode Service Layer Implementation", () => {
             expect(mockedAxios.get).toHaveBeenCalledTimes(2);
         });
 
+        it("should accept numeric runtime/memory fields from LeetCode", async () => {
+            // 1. Mock getQuestionId (GraphQL)
+            mockedAxios.post.mockResolvedValueOnce({
+                data: {
+                    data: {
+                        question: {
+                            questionId: "1"
+                        }
+                    }
+                }
+            });
+
+            // 2. Mock submission post
+            mockedAxios.post.mockResolvedValueOnce({
+                data: {
+                    submission_id: 12347
+                }
+            });
+
+            // 3. Mock polling results: SUCCESS with numeric runtime/memory
+            mockedAxios.get.mockResolvedValueOnce({
+                data: {
+                    state: "SUCCESS",
+                    status_msg: "Accepted",
+                    runtime: 72,
+                    memory: 42.5
+                }
+            });
+
+            const result = await service.submitSolution(
+                "two-sum",
+                "code",
+                "python3"
+            );
+
+            expect(result.accepted).toBe(true);
+            expect(result.statusMessage).toBe("Accepted");
+            expect(result.runtime).toBe("72");
+            expect(result.memory).toBe("42.5");
+        });
+
         it("should handle submission failures", async () => {
             // 1. Mock getQuestionId (GraphQL)
             mockedAxios.post.mockResolvedValueOnce({
