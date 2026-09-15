@@ -19,8 +19,8 @@ export interface LeetCodeCheckResponse {
     state: string;
     status_msg: string;
     status_code?: number;
-    runtime?: string;
-    memory?: string;
+    runtime?: string | number;
+    memory?: string | number;
     runtime_percentile?: number;
     memory_percentile?: number;
     code_answer?: string[];
